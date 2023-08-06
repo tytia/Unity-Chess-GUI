@@ -1,18 +1,17 @@
 /*
  * Class to help with picking colors for squares on the board.
- * DEVELOPMENT USE ONLY!
+ * DEVELOPMENT USE ONLY
  */
 
-using System;
 using UnityEngine;
 
-namespace GUI.Board
+namespace GUI.GameWindow
 {
     public class ColorPicker : MonoBehaviour
     {
         [SerializeField] private Color _lightCol = Square.lightCol;
         [SerializeField] private Color _darkCol = Square.darkCol;
-        [SerializeField] private Board _board;
+        [SerializeField] private GameWindow.Board _board;
 
         private void OnValidate()
         {
@@ -29,9 +28,9 @@ namespace GUI.Board
                 return;
             }
             
-            for (int file = 0; file < Board.boardSize; file++)
+            for (int file = 0; file < GameWindow.Board.boardSize; file++)
             {
-                for (int rank = 0; rank < Board.boardSize; rank++)
+                for (int rank = 0; rank < GameWindow.Board.boardSize; rank++)
                 {
                     Square sq = _board.GetSquare($"{(char)('a' + file)}{rank + 1}");
                     sq.color = (file + rank) % 2 == 0 ? _darkCol : _lightCol;

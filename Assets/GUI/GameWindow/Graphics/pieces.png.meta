@@ -13,8 +13,8 @@ TextureImporter:
     borderMipMap: 0
     mipMapsPreserveCoverage: 0
     alphaTestReferenceValue: 0.5
-    mipMapFadeDistanceStart: 1
-    mipMapFadeDistanceEnd: 3
+    mipMapFadeDistanceStart: 10
+    mipMapFadeDistanceEnd: 10
   bumpmap:
     convertToNormalMap: 0
     externalNormalMap: 0
@@ -48,7 +48,7 @@ TextureImporter:
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 100
+  spritePixelsToUnits: 64
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -69,10 +69,10 @@ TextureImporter:
   platformSettings:
   - serializedVersion: 3
     buildTarget: DefaultTexturePlatform
-    maxTextureSize: 2048
+    maxTextureSize: 1024
     resizeAlgorithm: 0
     textureFormat: -1
-    textureCompression: 1
+    textureCompression: 0
     compressionQuality: 50
     crunchedCompression: 0
     allowsAlphaSplitting: 0
@@ -123,7 +123,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: pieces_0
+      name: white-king
       rect:
         serializedVersion: 2
         x: 0
@@ -144,7 +144,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: pieces_1
+      name: white-queen
       rect:
         serializedVersion: 2
         x: 640
@@ -165,7 +165,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: pieces_2
+      name: white-bishop
       rect:
         serializedVersion: 2
         x: 1280
@@ -186,7 +186,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: pieces_3
+      name: white-knight
       rect:
         serializedVersion: 2
         x: 1920
@@ -207,7 +207,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: pieces_4
+      name: white-rook
       rect:
         serializedVersion: 2
         x: 2560
@@ -228,7 +228,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: pieces_5
+      name: white-pawn
       rect:
         serializedVersion: 2
         x: 3200
@@ -249,7 +249,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: pieces_6
+      name: black-king
       rect:
         serializedVersion: 2
         x: 0
@@ -270,7 +270,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: pieces_7
+      name: black-queen
       rect:
         serializedVersion: 2
         x: 640
@@ -291,7 +291,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: pieces_8
+      name: black-bishop
       rect:
         serializedVersion: 2
         x: 1280
@@ -312,7 +312,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: pieces_9
+      name: black-knight
       rect:
         serializedVersion: 2
         x: 1920
@@ -333,7 +333,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: pieces_10
+      name: black-rook
       rect:
         serializedVersion: 2
         x: 2560
@@ -354,7 +354,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: pieces_11
+      name: black-pawn
       rect:
         serializedVersion: 2
         x: 3200
@@ -385,18 +385,18 @@ TextureImporter:
     weights: []
     secondaryTextures: []
     nameFileIdTable:
-      pieces_0: -1062777172
-      pieces_1: 63300551
-      pieces_10: 64425432
-      pieces_11: -792833061
-      pieces_2: -1587882178
-      pieces_3: 1390392178
-      pieces_4: 578354166
-      pieces_5: 1324452686
-      pieces_6: -1764527209
-      pieces_7: -1872801253
-      pieces_8: -240685194
-      pieces_9: 1612827105
+      black-bishop: -240685194
+      black-king: -1764527209
+      black-knight: 1612827105
+      black-pawn: -792833061
+      black-queen: -1872801253
+      black-rook: 64425432
+      white-bishop: -1587882178
+      white-king: -1062777172
+      white-knight: 1390392178
+      white-pawn: 1324452686
+      white-queen: 63300551
+      white-rook: 578354166
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

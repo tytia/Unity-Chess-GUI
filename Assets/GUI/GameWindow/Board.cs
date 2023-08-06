@@ -1,16 +1,13 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using UnityEngine;
 
-namespace GUI.Board
+namespace GUI.GameWindow
 {
     public class Board : MonoBehaviour
     {
         [SerializeField] private Square _square;
         [SerializeField] private Transform _cam;
-        private Dictionary<string, Square> _squares = new();
+        private readonly Dictionary<string, Square> _squares = new();
         private static readonly int BoardSize = 8;
         
         public static int boardSize => BoardSize;
@@ -36,8 +33,8 @@ namespace GUI.Board
 
             _cam.transform.position = new Vector3((float)BoardSize / 2 - 0.5f, (float)BoardSize / 2 - 0.5f, _cam.transform.position.z);
         }
-        
-        internal Square GetSquare(string pos)
+
+        public Square GetSquare(string pos)
         {
             return _squares.TryGetValue(pos, out Square sq) ? sq : null;
         }
