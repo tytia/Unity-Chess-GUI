@@ -168,6 +168,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _piece: {fileID: 4347955908444823428, guid: 4e4e187798d0b5640b9f85113060935f, type: 3}
+  _sprites:
+  - {fileID: 1324452686, guid: 05f57e8f23e209545a5f0923832e09e9, type: 3}
+  - {fileID: 1390392178, guid: 05f57e8f23e209545a5f0923832e09e9, type: 3}
+  - {fileID: -1587882178, guid: 05f57e8f23e209545a5f0923832e09e9, type: 3}
+  - {fileID: 578354166, guid: 05f57e8f23e209545a5f0923832e09e9, type: 3}
+  - {fileID: 63300551, guid: 05f57e8f23e209545a5f0923832e09e9, type: 3}
+  - {fileID: -1062777172, guid: 05f57e8f23e209545a5f0923832e09e9, type: 3}
+  - {fileID: -792833061, guid: 05f57e8f23e209545a5f0923832e09e9, type: 3}
+  - {fileID: 1612827105, guid: 05f57e8f23e209545a5f0923832e09e9, type: 3}
+  - {fileID: -240685194, guid: 05f57e8f23e209545a5f0923832e09e9, type: 3}
+  - {fileID: 64425432, guid: 05f57e8f23e209545a5f0923832e09e9, type: 3}
+  - {fileID: -1872801253, guid: 05f57e8f23e209545a5f0923832e09e9, type: 3}
+  - {fileID: -1764527209, guid: 05f57e8f23e209545a5f0923832e09e9, type: 3}
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0
