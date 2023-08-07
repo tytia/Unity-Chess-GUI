@@ -3,7 +3,6 @@
  * DEVELOPMENT USE ONLY
  */
 
-using System;
 using UnityEngine;
 using static Utility.Notation;
 
@@ -13,7 +12,7 @@ namespace GUI.GameWindow
     {
         [SerializeField] private Color _lightCol;
         [SerializeField] private Color _darkCol;
-        [SerializeField] private GameWindow.Board _board;
+        [SerializeField] private Board _board;
 
         private void Awake()
         {
