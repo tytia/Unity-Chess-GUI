@@ -1,15 +1,21 @@
+using System;
+using Chess;
 using UnityEngine;
 
 namespace GUI.GameWindow
 {
     public class Piece : MonoBehaviour
     {
-        [SerializeField] private Sprite[] _sprites;
-        private SpriteRenderer _sr;
+        public SpriteRenderer sr { get; set; }
 
         private void Awake()
         {
-            _sr = gameObject.GetComponent<SpriteRenderer>();
+            sr = gameObject.GetComponent<SpriteRenderer>();
+        }
+        
+        public void SetSprite(Sprite sprite)
+        {
+            sr.sprite = sprite;
         }
     }
 }
