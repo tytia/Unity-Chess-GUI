@@ -1,4 +1,5 @@
-﻿using static Utility.Notation;
+﻿using System;
+using static Utility.Notation;
 
 namespace Chess
 {
@@ -11,7 +12,31 @@ namespace Chess
 
         public Game(string fen="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR")
         {
-            LoadFEN(this, fen);
+            LoadFromFEN(fen);
+        }
+        
+        public void LoadFromFEN(string fen)
+        {
+            string[] fields = fen.Split(' ');
+            string[] ranks = fields[0].Split('/');
+
+            Array.Clear(board, 0, board.Length);
+            for (int r = 7; r >= 0; r--)
+            {
+                int f = 0;
+                while (f < 8)
+                {
+                    if (Char.IsDigit(ranks[r][f]))
+                    {
+                        f += ranks[r][f] - '0';
+                    }
+                    else
+                    {
+                        var pos = (SquarePos)(8*r + f);
+                        board[(int)pos] = new Piece(CharToPieceType[ranks[r][f]], pos);
+                    }
+                }
+            }
         }
     }
 }

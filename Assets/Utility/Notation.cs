@@ -33,29 +33,5 @@ namespace Utility
             {'q', PieceType.Queen | PieceType.Black},
             {'k', PieceType.King | PieceType.Black}
         };
-
-        public static void LoadFEN(Game game, string fen)
-        {
-            string[] fields = fen.Split(' ');
-            string[] ranks = fields[0].Split('/');
-
-            Array.Clear(game.board, 0, game.board.Length);
-            for (int r = 7; r >= 0; r--)
-            {
-                int f = 0;
-                while (f < 8)
-                {
-                    if (Char.IsDigit(ranks[r][f]))
-                    {
-                        f += ranks[r][f] - '0';
-                    }
-                    else
-                    {
-                        var pos = (SquarePos)(8*r + f);
-                        game.board[(int)pos] = new Piece(CharToPieceType[ranks[r][f]], pos);
-                    }
-                }
-            }
-        }
     }
 }
