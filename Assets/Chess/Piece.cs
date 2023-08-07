@@ -16,12 +16,12 @@ namespace Chess
     
     public enum PieceType : byte
     {
-        Pawn = 1,
-        Knight = 2,
-        Bishop = 3,
-        Rook = 4,
-        Queen = 5,
-        King = 6,
+        Pawn = 0,
+        Knight = 1,
+        Bishop = 2,
+        Rook = 3,
+        Queen = 4,
+        King = 5,
         White = 8,
         Black = 16
     }
