@@ -3,15 +3,23 @@
  * DEVELOPMENT USE ONLY
  */
 
+using System;
 using UnityEngine;
+using static Utility.Notation;
 
 namespace GUI.GameWindow
 {
     public class ColorPicker : MonoBehaviour
     {
-        [SerializeField] private Color _lightCol = Square.lightCol;
-        [SerializeField] private Color _darkCol = Square.darkCol;
+        [SerializeField] private Color _lightCol;
+        [SerializeField] private Color _darkCol;
         [SerializeField] private GameWindow.Board _board;
+
+        private void Awake()
+        {
+            _lightCol = Square.lightCol;
+            _darkCol = Square.darkCol;
+        }
 
         private void OnValidate()
         {
@@ -23,18 +31,16 @@ namespace GUI.GameWindow
         
         private void UpdateBoard()
         {
-            if (_board == null || _board.GetSquare("h8") == null)
+            if (_board == null || _board.GetSquare(SquarePos.h8) == null)
             {
                 return;
             }
             
-            for (int file = 0; file < GameWindow.Board.boardSize; file++)
+            for (SquarePos pos = SquarePos.a1; pos <= SquarePos.h8; pos++)
             {
-                for (int rank = 0; rank < GameWindow.Board.boardSize; rank++)
-                {
-                    Square sq = _board.GetSquare($"{(char)('a' + file)}{rank + 1}");
-                    sq.color = (file + rank) % 2 == 0 ? _darkCol : _lightCol;
-                }
+                int file = (int)pos % 8, rank = (int)pos / 8;
+                Square sq = _board.GetSquare(pos);
+                sq.color = (file + rank) % 2 == 0 ? _darkCol : _lightCol;
             }
         }
     }

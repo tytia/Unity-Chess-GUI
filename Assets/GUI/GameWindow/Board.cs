@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using static Utility.Notation;
 
 namespace GUI.GameWindow
 {
@@ -7,11 +8,8 @@ namespace GUI.GameWindow
     {
         [SerializeField] private Square _square;
         [SerializeField] private Transform _cam;
-        private readonly Dictionary<string, Square> _squares = new();
-        private static readonly int BoardSize = 8;
-        
-        public static int boardSize => BoardSize;
-        
+        private readonly Square[] _squares = new Square[64];
+
         private void Start()
         {
             InitBoard();
@@ -19,24 +17,22 @@ namespace GUI.GameWindow
 
         private void InitBoard()
         {
-            for (int file = 0; file < BoardSize; file++)
+            for (SquarePos pos = SquarePos.a1; pos <= SquarePos.h8; pos++)
             {
-                for (int rank = 0; rank < BoardSize; rank++)
-                {
-                    Square sq = Instantiate(_square, new Vector3(file, rank), Quaternion.identity, transform);
-                    sq.color = (file + rank) % 2 == 0 ? Square.darkCol : Square.lightCol;
-                    sq.name = $"{(char)('a' + file)}{rank + 1}";
-                    
-                    _squares.Add(sq.name, sq);
-                }
+                int file = (int)pos % 8, rank = (int)pos / 8;
+                Square sq = Instantiate(_square, new Vector3(file, rank), Quaternion.identity, transform);
+                sq.color = (file + rank) % 2 == 0 ? Square.darkCol : Square.lightCol;
+                sq.name = pos.ToString();
+
+                _squares[(int)pos] = sq;
             }
 
-            _cam.transform.position = new Vector3((float)BoardSize / 2 - 0.5f, (float)BoardSize / 2 - 0.5f, _cam.transform.position.z);
+            _cam.transform.position = new Vector3((float)8 / 2 - 0.5f, (float)8 / 2 - 0.5f, _cam.transform.position.z);
         }
 
-        public Square GetSquare(string pos)
+        public Square GetSquare(SquarePos pos)
         {
-            return _squares.TryGetValue(pos, out Square sq) ? sq : null;
+            return _squares[(int)pos];
         }
     }
 }
