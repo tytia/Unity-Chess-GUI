@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using static Utility.Notation;
 
 namespace Chess
@@ -13,6 +14,11 @@ namespace Chess
         public Game(string fen="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR")
         {
             LoadFromFEN(fen);
+        }
+
+        public Piece[] GetPieces()
+        {
+            return board.Where(piece => piece.HasValue).Select(piece => piece.Value).ToArray();
         }
         
         public void LoadFromFEN(string fen)
