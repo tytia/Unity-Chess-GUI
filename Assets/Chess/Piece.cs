@@ -1,7 +1,6 @@
-﻿using System;
-using static Utility.Notation;
+﻿using static Utility.Notation;
 
-namespace ChessGame
+namespace Chess
 {
     public struct Piece
     {

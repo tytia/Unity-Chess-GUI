@@ -1,5 +1,4 @@
 using UnityEngine;
-using ChessGame;
 
 namespace GUI.GameWindow
 {

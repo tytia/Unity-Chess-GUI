@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
-using ChessGame;
-using GUI.GameWindow;
-using Piece = ChessGame.Piece;
+using Chess;
 
 namespace Utility
 {
