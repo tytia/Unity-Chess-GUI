@@ -16,9 +16,9 @@ namespace GUI.GameWindow
 
         private void InitBoard()
         {
-            for (SquarePos pos = SquarePos.a1; pos <= SquarePos.h8; pos++)
+            for (var pos = SquarePos.a1; pos <= SquarePos.h8; pos++)
             {
-                Vector2 point = pos.ToVector2();
+                var point = pos.ToVector2();
                 Square sq = Instantiate(_square, point, Quaternion.identity, transform);
                 sq.color = (point.x + point.y) % 2 == 0 ? Square.darkCol : Square.lightCol;
                 sq.name = pos.ToString();
