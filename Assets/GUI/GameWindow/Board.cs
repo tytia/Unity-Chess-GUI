@@ -18,9 +18,9 @@ namespace GUI.GameWindow
         {
             for (SquarePos pos = SquarePos.a1; pos <= SquarePos.h8; pos++)
             {
-                int file = (int)pos % 8, rank = (int)pos / 8;
-                Square sq = Instantiate(_square, new Vector3(file, rank), Quaternion.identity, transform);
-                sq.color = (file + rank) % 2 == 0 ? Square.darkCol : Square.lightCol;
+                Vector2 point = pos.ToVector2();
+                Square sq = Instantiate(_square, point, Quaternion.identity, transform);
+                sq.color = (point.x + point.y) % 2 == 0 ? Square.darkCol : Square.lightCol;
                 sq.name = pos.ToString();
 
                 _squares[(int)pos] = sq;
