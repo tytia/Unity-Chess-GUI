@@ -25,7 +25,7 @@ namespace GUI.GameWindow
 
         private void InitPieces()
         {
-            foreach (Chess.Piece piece in _game.GetPieces())
+            foreach (Chess.Piece piece in _game.pieces)
             {
                 var point = piece.pos.ToVector2();
                 Piece p = Instantiate(_piece, point, Quaternion.identity, transform);
@@ -37,11 +37,11 @@ namespace GUI.GameWindow
         
         private Sprite PieceTypeToSprite(PieceType type)
         {
-            if ((type & PieceType.White) == PieceType.White)
+            if (type.HasFlag(PieceType.White))
             {
                 return sprites[(int)(type ^ PieceType.White)];
             }
-            if ((type & PieceType.Black) == PieceType.Black)
+            if (type.HasFlag(PieceType.Black))
             {
                 return sprites[(int)(type ^ PieceType.Black) + 6];
             }
