@@ -97,16 +97,3 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3b55747420d8e734b8e0fef0b4810be1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _sprites:
-  - {fileID: 1324452686, guid: 05f57e8f23e209545a5f0923832e09e9, type: 3}
-  - {fileID: 1390392178, guid: 05f57e8f23e209545a5f0923832e09e9, type: 3}
-  - {fileID: -1587882178, guid: 05f57e8f23e209545a5f0923832e09e9, type: 3}
-  - {fileID: 578354166, guid: 05f57e8f23e209545a5f0923832e09e9, type: 3}
-  - {fileID: 63300551, guid: 05f57e8f23e209545a5f0923832e09e9, type: 3}
-  - {fileID: -1062777172, guid: 05f57e8f23e209545a5f0923832e09e9, type: 3}
-  - {fileID: -792833061, guid: 05f57e8f23e209545a5f0923832e09e9, type: 3}
-  - {fileID: 1612827105, guid: 05f57e8f23e209545a5f0923832e09e9, type: 3}
-  - {fileID: -240685194, guid: 05f57e8f23e209545a5f0923832e09e9, type: 3}
-  - {fileID: 64425432, guid: 05f57e8f23e209545a5f0923832e09e9, type: 3}
-  - {fileID: -1872801253, guid: 05f57e8f23e209545a5f0923832e09e9, type: 3}
-  - {fileID: -1764527209, guid: 05f57e8f23e209545a5f0923832e09e9, type: 3}
