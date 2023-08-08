@@ -38,5 +38,19 @@ namespace Utility
             {'q', PieceType.Queen | PieceType.Black},
             {'k', PieceType.King | PieceType.Black}
         };
+        
+        public static readonly Dictionary<char, CastlingRights> CharToCastlingRights = new()
+        {
+            {'K', CastlingRights.WhiteKingSide},
+            {'Q', CastlingRights.WhiteQueenSide},
+            {'k', CastlingRights.BlackKingSide},
+            {'q', CastlingRights.BlackQueenSide}
+        };
+
+        public static bool IsValidFEN(string fen)
+        {
+            // TODO: FEN Validation
+            return false;
+        }
     }
 }
