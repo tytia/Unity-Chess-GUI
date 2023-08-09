@@ -5,6 +5,11 @@ using UnityEngine.EventSystems;
 namespace GUI.GameWindow {
     public class DragPiece : MonoBehaviour {
         private Transform _pieceToDrag;
+        private Camera _cam;
+
+        private void Awake() {
+            _cam = Camera.main;
+        }
 
         private void OnMouseDown() {
             _pieceToDrag = transform.childCount != 0 ? transform.GetChild(0) : null;
@@ -25,8 +30,8 @@ namespace GUI.GameWindow {
             }
 
             Vector3 mousePos = Input.mousePosition;
-            mousePos.z = 0 - Camera.main!.transform.position.z; // distance from camera
-            _pieceToDrag.position = Camera.main!.ScreenToWorldPoint(mousePos);
+            mousePos.z = 0 - _cam.transform.position.z; // distance from camera
+            _pieceToDrag.position = _cam.ScreenToWorldPoint(mousePos);
         }
 
         private void MoveToNearestSquare() {
@@ -34,12 +39,12 @@ namespace GUI.GameWindow {
                 return;
             }
             
-            Vector2 mousePosWorld = Camera.main!.ScreenToWorldPoint(Input.mousePosition);
+            Vector2 mousePosWorld = _cam.ScreenToWorldPoint(Input.mousePosition);
             Collider2D pointCollider = Physics2D.OverlapPoint(mousePosWorld);
             
             if (pointCollider != null) {
-                _pieceToDrag.position = pointCollider.transform.position;
                 _pieceToDrag.parent = pointCollider.transform;
+                _pieceToDrag.position = _pieceToDrag.parent.position;
             }
             else {
                 // return to original square
