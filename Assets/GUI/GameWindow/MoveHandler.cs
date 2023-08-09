@@ -16,7 +16,7 @@ namespace GUI.GameWindow {
         }
 
         private void OnMouseUp() {
-            SnapToSquare();
+            MoveToNearestSquare();
         }
 
         private void MoveToMouse() {
@@ -29,19 +29,20 @@ namespace GUI.GameWindow {
             _pieceToDrag.position = Camera.main!.ScreenToWorldPoint(mousePos);
         }
 
-        private void SnapToSquare() {
+        private void MoveToNearestSquare() {
             if (_pieceToDrag == null) {
                 return;
             }
             
-            Ray ray = Camera.main!.ScreenPointToRay(Input.mousePosition);
-            RaycastHit2D hit = Physics2D.Raycast(ray.origin, ray.direction);
+            Vector2 mousePosWorld = Camera.main!.ScreenToWorldPoint(Input.mousePosition);
+            Collider2D pointCollider = Physics2D.OverlapPoint(mousePosWorld);
             
-            if (hit.collider != null) {
-                _pieceToDrag.position = hit.transform.position;
-                _pieceToDrag.parent = hit.transform;
+            if (pointCollider != null) {
+                _pieceToDrag.position = pointCollider.transform.position;
+                _pieceToDrag.parent = pointCollider.transform;
             }
             else {
+                // return to original square
                 _pieceToDrag.position = transform.position;
             }
         }
