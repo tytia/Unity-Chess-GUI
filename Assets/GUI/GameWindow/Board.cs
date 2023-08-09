@@ -21,7 +21,7 @@ namespace GUI.GameWindow {
                 _squares[(int)pos] = sq;
             }
 
-            _cam.transform.position = new Vector3((float)8 / 2 - 0.5f, (float)8 / 2 - 0.5f, _cam.transform.position.z);
+            _cam.position = new Vector3((float)8 / 2 - 0.5f, (float)8 / 2 - 0.5f, _cam.position.z);
         }
 
         public Square GetSquare(SquarePos pos) {
