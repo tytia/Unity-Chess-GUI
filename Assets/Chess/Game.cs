@@ -15,13 +15,18 @@ namespace Chess {
         public SquarePos? enPassantPos { get; set; }
         public int halfMoveClock { get; set; }
         public int fullMoveClock { get; set; }
+        
+        public void CapturePiece(Piece piece) {
+            pieces.Remove(piece);
+            board[(int)piece.pos] = null;
+        }
 
         public Game(string fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1") {
             LoadFromFEN(fen);
             Debug.Log("Game created!");
         }
 
-        public void LoadFromFEN(string fen) {
+        public void LoadFromFEN(in string fen) {
             string[] fields = fen.Split(' ');
 
             // TODO: Very basic FEN validation, replace with IsValidFEN() once it's complete
@@ -39,7 +44,7 @@ namespace Chess {
                         file += c - '0';
                     }
                     else {
-                        pieces.Add(new Piece(CharToPieceType[c], (SquarePos)(i + file)));
+                        pieces.Add(new Piece(charToPieceType[c], (SquarePos)(i + file)));
                         board[i + file] = pieces.Last();
                         file++;
                     }
@@ -51,7 +56,7 @@ namespace Chess {
             castlingRights = CastlingRights.None;
             if (fields[2] != "-") {
                 foreach (char c in fields[2]) {
-                    castlingRights |= CharToCastlingRights[c];
+                    castlingRights |= charToCastlingRights[c];
                 }
             }
 
