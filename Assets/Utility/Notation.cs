@@ -20,7 +20,7 @@ namespace Utility {
             return new Vector2((int)pos % 8, (int)pos / 8);
         }
 
-        public static readonly Dictionary<char, PieceType> CharToPieceType = new() {
+        public static readonly Dictionary<char, PieceType> charToPieceType = new() {
             { 'P', PieceType.Pawn | PieceType.White },
             { 'N', PieceType.Knight | PieceType.White },
             { 'B', PieceType.Bishop | PieceType.White },
@@ -35,14 +35,14 @@ namespace Utility {
             { 'k', PieceType.King | PieceType.Black }
         };
 
-        public static readonly Dictionary<char, CastlingRights> CharToCastlingRights = new() {
+        public static readonly Dictionary<char, CastlingRights> charToCastlingRights = new() {
             { 'K', CastlingRights.WhiteKingSide },
             { 'Q', CastlingRights.WhiteQueenSide },
             { 'k', CastlingRights.BlackKingSide },
             { 'q', CastlingRights.BlackQueenSide }
         };
 
-        public static bool IsValidFEN(string fen) {
+        public static bool IsValidFEN(in string fen) {
             // TODO: FEN Validation
             return false;
         }
