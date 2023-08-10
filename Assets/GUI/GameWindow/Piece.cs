@@ -2,14 +2,15 @@ using UnityEngine;
 
 namespace GUI.GameWindow {
     public class Piece : MonoBehaviour {
-        public SpriteRenderer sr { get; set; }
+        private SpriteRenderer _sr;
+        public Chess.Piece piece { get; set; }
 
         private void Awake() {
-            sr = gameObject.GetComponent<SpriteRenderer>();
+            _sr = gameObject.GetComponent<SpriteRenderer>();
         }
 
         public void SetSprite(Sprite sprite) {
-            sr.sprite = sprite;
+            _sr.sprite = sprite;
         }
     }
 }
