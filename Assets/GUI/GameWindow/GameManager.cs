@@ -1,0 +1,22 @@
+﻿using System.Collections.Generic;
+using UnityEngine;
+using Chess;
+
+namespace GUI.GameWindow {
+    public static class GameManager {
+        private static Game _game = new();
+
+        public static void StartNewGame(string fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1") {
+            _game = new Game(fen);
+        }
+        
+        public static List<Chess.Piece> GetPieces() {
+            return _game.pieces;
+        }
+
+        public static void CapturePiece(Piece pieceGUI) {
+            _game.CapturePiece(pieceGUI.piece);
+            Object.Destroy(pieceGUI.gameObject);
+        }
+    }
+}
