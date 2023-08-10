@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace GUI {
     public class LimitFPS : MonoBehaviour {
-        void Start() {
+        private void Start() {
             Application.targetFrameRate = 60;
         }
     }
