@@ -1,9 +1,8 @@
-using System;
 using UnityEngine;
-using UnityEngine.EventSystems;
+using static GUI.GameWindow.GameManager;
 
 namespace GUI.GameWindow {
-    public class DragPiece : MonoBehaviour {
+    public class MoveHandler : MonoBehaviour {
         private Transform _pieceToDrag;
         private Camera _cam;
 
@@ -43,6 +42,10 @@ namespace GUI.GameWindow {
             Collider2D pointCollider = Physics2D.OverlapPoint(mousePosWorld);
             
             if (pointCollider != null) {
+                foreach (Piece piece in pointCollider.GetComponentsInChildren<Piece>()) {
+                    CapturePiece(piece);
+                }
+                
                 _pieceToDrag.parent = pointCollider.transform;
                 _pieceToDrag.position = _pieceToDrag.parent.position;
             }
