@@ -2,26 +2,23 @@ using System;
 using UnityEngine;
 using Chess;
 using Utility;
+using static GUI.GameWindow.GameManager;
 
 namespace GUI.GameWindow {
     public class PieceManager : MonoBehaviour {
-        [SerializeField] private Piece _piece;
+        [SerializeField] private Piece _pieceGUI;
         [SerializeField] private Board _board;
         [SerializeField] private Sprite[] _sprites;
-        private Game _game;
-
-        private void Awake() {
-            _game = new Game();
-        }
 
         private void Start() {
             InitPieces();
         }
 
         private void InitPieces() {
-            foreach (Chess.Piece piece in _game.pieces) {
+            foreach (Chess.Piece piece in GetPieces()) {
                 var point = piece.pos.ToVector2();
-                Piece p = Instantiate(_piece, point, Quaternion.identity, _board.GetSquare(piece.pos).transform);
+                Piece p = Instantiate(_pieceGUI, point, Quaternion.identity, _board.GetSquare(piece.pos).transform);
+                p.piece = piece;
                 p.SetSprite(PieceTypeToSprite(piece.type));
                 PieceType color = piece.type & (PieceType.White | PieceType.Black);
                 p.name = color + " " + (piece.type ^ color);
