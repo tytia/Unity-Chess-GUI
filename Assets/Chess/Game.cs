@@ -44,7 +44,7 @@ namespace Chess {
                         file += c - '0';
                     }
                     else {
-                        pieces.Add(new Piece(charToPieceType[c], (SquarePos)(i + file)));
+                        pieces.Add(new Piece(Notation.charToPieceType[c], (SquarePos)(i + file)));
                         board[i + file] = pieces.Last();
                         file++;
                     }
@@ -56,7 +56,7 @@ namespace Chess {
             castlingRights = CastlingRights.None;
             if (fields[2] != "-") {
                 foreach (char c in fields[2]) {
-                    castlingRights |= charToCastlingRights[c];
+                    castlingRights |= Notation.charToCastlingRights[c];
                 }
             }
 
