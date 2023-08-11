@@ -1,9 +1,9 @@
 using UnityEngine;
-using static GUI.GameWindow.GameManager;
 
 namespace GUI.GameWindow {
     public class MoveHandler : MonoBehaviour {
         private Transform _pieceToDrag;
+        private SpriteRenderer _pieceSpriteRenderer;
         private Camera _cam;
 
         private void Awake() {
@@ -12,18 +12,24 @@ namespace GUI.GameWindow {
 
         private void OnMouseDown() {
             _pieceToDrag = transform.childCount != 0 ? transform.GetChild(0) : null;
-            MoveToMouse();
+            
+            if (_pieceToDrag != null) {
+                _pieceSpriteRenderer = _pieceToDrag.GetComponent<SpriteRenderer>();
+                _pieceSpriteRenderer.sortingOrder = 1;
+            }
+            
+            MovePieceToMouse();
         }
 
         private void OnMouseDrag() {
-            MoveToMouse();
+            MovePieceToMouse();
         }
 
         private void OnMouseUp() {
-            MoveToNearestSquare();
+            MovePieceToNearestSquare();
         }
 
-        private void MoveToMouse() {
+        private void MovePieceToMouse() {
             if (_pieceToDrag == null) {
                 return;
             }
@@ -33,7 +39,7 @@ namespace GUI.GameWindow {
             _pieceToDrag.position = _cam.ScreenToWorldPoint(mousePos);
         }
 
-        private void MoveToNearestSquare() {
+        private void MovePieceToNearestSquare() {
             if (_pieceToDrag == null) {
                 return;
             }
@@ -43,7 +49,7 @@ namespace GUI.GameWindow {
             
             if (pointCollider != null) {
                 foreach (Piece piece in pointCollider.GetComponentsInChildren<Piece>()) {
-                    CapturePiece(piece);
+                    GameManager.CapturePiece(piece);
                 }
                 
                 _pieceToDrag.parent = pointCollider.transform;
@@ -53,6 +59,8 @@ namespace GUI.GameWindow {
                 // return to original square
                 _pieceToDrag.position = transform.position;
             }
+            
+            _pieceSpriteRenderer.sortingOrder = 0;
         }
     }
 }
