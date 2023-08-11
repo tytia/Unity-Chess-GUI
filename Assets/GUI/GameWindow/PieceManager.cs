@@ -2,7 +2,6 @@ using System;
 using UnityEngine;
 using Chess;
 using Utility;
-using static GUI.GameWindow.GameManager;
 
 namespace GUI.GameWindow {
     public class PieceManager : MonoBehaviour {
@@ -10,12 +9,17 @@ namespace GUI.GameWindow {
         [SerializeField] private Board _board;
         [SerializeField] private Sprite[] _sprites;
 
-        private void Start() {
+        private void OnEnable() {
             InitPieces();
         }
 
-        private void InitPieces() {
-            foreach (Chess.Piece piece in GetPieces()) {
+        private void OnDisable() {
+            RemovePieces();
+        }
+
+        public void InitPieces() {
+            GameManager.pieceManager = this;
+            foreach (Chess.Piece piece in GameManager.GetPieces()) {
                 var point = piece.pos.ToVector2();
                 Piece p = Instantiate(_pieceGUI, point, Quaternion.identity, _board.GetSquare(piece.pos).transform);
                 p.piece = piece;
