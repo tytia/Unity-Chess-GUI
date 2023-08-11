@@ -25,6 +25,16 @@ namespace GUI.GameWindow {
             }
         }
 
+        public void RemovePieces() {
+            if (_board == null) {
+                return;
+            }
+            
+            foreach (Piece piece in _board.GetComponentsInChildren<Piece>()) {
+                Destroy(piece.gameObject);
+            }
+        }
+
         private Sprite PieceTypeToSprite(PieceType type) {
             if (type.HasFlag(PieceType.White)) {
                 return _sprites[(int)(type ^ PieceType.White)];
