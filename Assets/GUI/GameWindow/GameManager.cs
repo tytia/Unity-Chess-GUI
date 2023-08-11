@@ -5,9 +5,12 @@ using Chess;
 namespace GUI.GameWindow {
     public static class GameManager {
         private static Game _game = new();
+        public static PieceManager pieceManager { get; set; }
 
         public static void StartNewGame(string fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1") {
             _game = new Game(fen);
+            pieceManager.RemovePieces();
+            pieceManager.InitPieces();
         }
         
         public static List<Chess.Piece> GetPieces() {
