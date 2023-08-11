@@ -1,11 +1,12 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using Chess;
 using UnityEngine;
 
 namespace Utility {
     public static class Notation {
-        public enum SquarePos : byte
-        {
+        public enum SquarePos : byte {
             a1, b1, c1, d1, e1, f1, g1, h1,
             a2, b2, c2, d2, e2, f2, g2, h2,
             a3, b3, c3, d3, e3, f3, g3, h3,
@@ -43,8 +44,55 @@ namespace Utility {
         };
 
         public static bool IsValidFEN(in string fen) {
-            // TODO: FEN Validation
-            return false;
+            string[] fields = fen.Split(' ');
+
+            if (fields.Length != 6) {
+                return false;
+            }
+
+            string[] ranks = fields[0].Split('/');
+            if (ranks.Length != 8) {
+                return false;
+            }
+
+            foreach (string rank in ranks) {
+                var files = 0;
+                foreach (char c in rank) {
+                    if (!charToPieceType.ContainsKey(c) && !Char.IsDigit(c)) {
+                        return false;
+                    }
+
+                    files += (Char.IsDigit(c)) ? c - '0' : 1;
+                }
+
+                if (files != 8) {
+                    return false;
+                }
+            }
+
+            if (fields[1] != "w" && fields[1] != "b") {
+                return false;
+            }
+
+            bool areValidCastlingRights = fields[2].All(c => charToCastlingRights.ContainsKey(c));
+            bool isDistinct = fields[2].Distinct().Count() == fields[2].Length;
+            if ((!areValidCastlingRights || !isDistinct) && fields[2] != "-") {
+                return false;
+            }
+            
+            if (!Enum.TryParse<SquarePos>(fields[3], out _) && fields[3] != "-") {
+                return false;
+            }
+
+            if (!Int32.TryParse(fields[4], out int num) || num >= 150) {
+                return false;
+            }
+
+            if (!Int32.TryParse(fields[5], out int _)) {
+                return false;
+            }
+
+            return true;
         }
     }
 }
