@@ -7,6 +7,8 @@ namespace GUI.GameWindow {
         [SerializeField] private Square _square;
         [SerializeField] private Transform _cam;
         private readonly Square[] _squares = new Square[64];
+        
+        public ReadOnlyCollection<Square> squares => new(_squares);
 
         private void Awake() {
             InitBoard();
@@ -31,10 +33,6 @@ namespace GUI.GameWindow {
         
         public Square GetSquare(SquarePos pos) {
             return _squares[(int)pos];
-        }
-
-        public ReadOnlyCollection<Square> GetSquares() {
-            return new ReadOnlyCollection<Square>(_squares);
         }
     }
 }
