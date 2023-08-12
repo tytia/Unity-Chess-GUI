@@ -9,15 +9,14 @@ namespace GUI.GameWindow {
         [SerializeField] private GameObject _errorText;
         
         public void LoadFEN() {
-            print("Validating FEN");
-            if (!Notation.IsValidFEN(_fenInput.text)) {
+            string fenText = _fenInput.text.Trim();
+            if (!Notation.IsValidFEN(fenText)) {
                 _errorText.SetActive(true);
                 return;
             }
             
             _errorText.SetActive(false);
-            print("Starting new game");
-            GameManager.StartNewGame(_fenInput.text);
+            GameManager.StartNewGame(fenText);
             _fenInput.text = "";
         }
     }
