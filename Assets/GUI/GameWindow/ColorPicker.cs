@@ -24,7 +24,7 @@ namespace GUI.GameWindow {
         }
 
         private void UpdateBoard() {
-            foreach (Square sq in _board.GetSquares()) {
+            foreach (Square sq in _board.squares) {
                 Vector2 worldPos = sq.transform.position;
                 sq.color = (worldPos.x + worldPos.y) % 2 == 0 ? _darkCol : _lightCol;
             }
