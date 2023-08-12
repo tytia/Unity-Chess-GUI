@@ -18,20 +18,15 @@ namespace GUI.GameWindow {
         }
 
         private void OnValidate() {
-            if (gameObject.activeSelf) {
+            if (gameObject.activeSelf && _board != null && _board.GetSquare(SquarePos.h8) != null) {
                 UpdateBoard();
             }
         }
 
         private void UpdateBoard() {
-            if (_board == null || _board.GetSquare(SquarePos.h8) == null) {
-                return;
-            }
-
-            for (var pos = SquarePos.a1; pos <= SquarePos.h8; pos++) {
-                var point = pos.ToVector2();
-                Square sq = _board.GetSquare(pos);
-                sq.color = (point.x + point.y) % 2 == 0 ? _darkCol : _lightCol;
+            foreach (Square sq in _board.GetSquares()) {
+                Vector2 worldPos = sq.transform.position;
+                sq.color = (worldPos.x + worldPos.y) % 2 == 0 ? _darkCol : _lightCol;
             }
         }
     }

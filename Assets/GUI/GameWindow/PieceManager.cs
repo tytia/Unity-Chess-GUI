@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 using Chess;
-using Utility;
+using static Utility.Notation;
 
 namespace GUI.GameWindow {
     public class PieceManager : MonoBehaviour {
@@ -20,8 +20,8 @@ namespace GUI.GameWindow {
         public void InitPieces() {
             GameManager.pieceManager = this;
             foreach (Chess.Piece piece in GameManager.GetPieces()) {
-                var point = piece.pos.ToVector2();
-                Piece p = Instantiate(_pieceGUI, point, Quaternion.identity, _board.GetSquare(piece.pos).transform);
+                var point = ((SquarePos)piece.index).ToVector2();
+                Piece p = Instantiate(_pieceGUI, point, Quaternion.identity, _board.GetSquare(piece.index).transform);
                 p.piece = piece;
                 p.SetSprite(PieceTypeToSprite(piece.type));
                 PieceType color = piece.type & (PieceType.White | PieceType.Black);

@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using UnityEngine;
 using static Utility.Notation;
 
@@ -24,8 +25,16 @@ namespace GUI.GameWindow {
             _cam.position = new Vector3((float)8 / 2 - 0.5f, (float)8 / 2 - 0.5f, _cam.position.z);
         }
 
+        public Square GetSquare(int index) {
+            return _squares[index];
+        }
+        
         public Square GetSquare(SquarePos pos) {
             return _squares[(int)pos];
+        }
+
+        public ReadOnlyCollection<Square> GetSquares() {
+            return new ReadOnlyCollection<Square>(_squares);
         }
     }
 }

@@ -2,13 +2,13 @@
 
 namespace Chess {
     public struct Piece {
-        public Piece(PieceType type, SquarePos pos) {
+        public Piece(PieceType type, int index) {
             this.type = type;
-            this.pos = pos;
+            this.index = index;
         }
 
         public PieceType type { get; set; }
-        public SquarePos pos { get; set; }
+        public int index { get; set; }
     }
 
     public enum PieceType : byte {

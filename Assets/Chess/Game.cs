@@ -20,13 +20,13 @@ namespace Chess {
         public List<Piece> pieces { get; private set; } = new(32);
         public Side sideToMove { get; set; }
         public CastlingRights castlingRights { get; set; }
-        public SquarePos? enPassantPos { get; set; }
+        public int? enPassantIndex { get; set; }
         public int halfMoveClock { get; set; }
         public int fullMoveClock { get; set; }
 
         public void CapturePiece(Piece piece) {
             pieces.Remove(piece);
-            board[(int)piece.pos] = null;
+            board[piece.index] = null;
         }
 
         public Game(string fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1") {
@@ -47,7 +47,7 @@ namespace Chess {
                         file += c - '0';
                     }
                     else {
-                        pieces.Add(new Piece(Notation.charToPieceType[c], (SquarePos)(i + file)));
+                        pieces.Add(new Piece(Notation.charToPieceType[c], i + file));
                         board[i + file] = pieces.Last();
                         file++;
                     }
@@ -63,7 +63,7 @@ namespace Chess {
                 }
             }
 
-            enPassantPos = fields[3] == "-" ? null : Enum.Parse<SquarePos>(fields[3]);
+            enPassantIndex = fields[3] == "-" ? null : (int)Enum.Parse<SquarePos>(fields[3]);
             halfMoveClock = Int32.Parse(fields[4]);
             fullMoveClock = Int32.Parse(fields[5]);
         }
