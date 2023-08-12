@@ -44,9 +44,11 @@ namespace Utility {
         };
 
         public static bool IsValidFEN(in string fen) {
+            // TODO: Validation is incomplete; it does not account for correct game logic.
+            // See: https://chess.stackexchange.com/questions/1482/how-do-you-know-when-a-fen-position-is-legal
             string[] fields = fen.Split(' ');
 
-            if (fields.Length != 6) {
+            if (fields.Length is < 1 or > 6) {
                 return false;
             }
 
@@ -70,24 +72,29 @@ namespace Utility {
                 }
             }
 
+            if (fields.Length < 2) return true;
             if (fields[1] != "w" && fields[1] != "b") {
                 return false;
             }
 
+            if (fields.Length < 3) return true;
             bool areValidCastlingRights = fields[2].All(c => charToCastlingRights.ContainsKey(c));
             bool isDistinct = fields[2].Distinct().Count() == fields[2].Length;
             if ((!areValidCastlingRights || !isDistinct) && fields[2] != "-") {
                 return false;
             }
             
+            if (fields.Length < 4) return true;
             if (!Enum.TryParse<SquarePos>(fields[3], out _) && fields[3] != "-") {
                 return false;
             }
 
+            if (fields.Length < 5) return true;
             if (!Int32.TryParse(fields[4], out int num) || num >= 150) {
                 return false;
             }
 
+            if (fields.Length < 6) return true;
             if (!Int32.TryParse(fields[5], out int _)) {
                 return false;
             }
