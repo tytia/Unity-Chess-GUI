@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.ObjectModel;
 using UnityEngine;
 using Chess;
 
@@ -13,7 +13,7 @@ namespace GUI.GameWindow {
             pieceManager.InitPieces();
         }
         
-        public static List<Chess.Piece> GetPieces() {
+        public static ReadOnlyCollection<Chess.Piece> GetPieces() {
             return _game.pieces;
         }
 
