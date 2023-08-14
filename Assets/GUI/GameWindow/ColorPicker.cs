@@ -18,12 +18,12 @@ namespace GUI.GameWindow {
         }
 
         private void OnValidate() {
-            if (gameObject.activeSelf && _board != null && _board.GetSquare(SquarePos.h8) != null) {
-                UpdateBoard();
+            if (gameObject.activeSelf && _board != null && _board.GetSquare((int)SquarePos.h8) != null) {
+                UpdateSquares();
             }
         }
 
-        private void UpdateBoard() {
+        private void UpdateSquares() {
             foreach (Square sq in _board.squares) {
                 Vector2 worldPos = sq.transform.position;
                 sq.color = (worldPos.x + worldPos.y) % 2 == 0 ? _darkCol : _lightCol;
