@@ -20,6 +20,10 @@ namespace Utility {
         public static Vector2 ToVector2(this SquarePos pos) {
             return new Vector2((int)pos % 8, (int)pos / 8);
         }
+        
+        public static int ToBoardIndex(this Vector3 vec) {
+            return (int)(vec.x + vec.y * 8);
+        }
 
         public static readonly Dictionary<char, PieceType> charToPieceType = new() {
             { 'P', PieceType.Pawn | PieceType.White },

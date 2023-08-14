@@ -14,6 +14,21 @@ using Utility;
 using static Utility.Notation;
 
 namespace Chess {
+    public enum Side : byte {
+        White,
+        Black
+    }
+
+    [Flags]
+    public enum CastlingRights : byte {
+        None = 0,
+        WhiteKingSide = 1,
+        WhiteQueenSide = 2,
+        BlackKingSide = 4,
+        BlackQueenSide = 8,
+        All = WhiteKingSide | WhiteQueenSide | BlackKingSide | BlackQueenSide
+    }
+    
     public class Game {
         private readonly Piece?[] _board = new Piece?[64];
         private readonly List<Piece> _pieces = new(32);
@@ -25,13 +40,19 @@ namespace Chess {
         
         public ReadOnlyCollection<Piece> pieces => new(_pieces);
 
+        public Game(string fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR") {
+            LoadFromFEN(fen);
+        }
+        
+        public void MovePiece(ref Piece piece, int toIndex) {
+            _board[piece.index] = null;
+            piece.index = toIndex;
+            _board[toIndex] = piece;
+        }
+        
         public void CapturePiece(Piece piece) {
             _pieces.Remove(piece);
             _board[piece.index] = null;
-        }
-
-        public Game(string fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR") {
-            LoadFromFEN(fen);
         }
 
         private void LoadFromFEN(in string fen) {
@@ -81,20 +102,5 @@ namespace Chess {
             
             _fullMoveClock = fields.Length < 6 ? (_halfMoveClock / 2) + 1 : Int32.Parse(fields[5]);
         }
-    }
-
-    public enum Side : byte {
-        White,
-        Black
-    }
-
-    [Flags]
-    public enum CastlingRights : byte {
-        None = 0,
-        WhiteKingSide = 1,
-        WhiteQueenSide = 2,
-        BlackKingSide = 4,
-        BlackQueenSide = 8,
-        All = WhiteKingSide | WhiteQueenSide | BlackKingSide | BlackQueenSide
     }
 }

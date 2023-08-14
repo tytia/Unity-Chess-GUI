@@ -5,7 +5,7 @@ using static Utility.Notation;
 
 namespace GUI.GameWindow {
     public class PieceManager : MonoBehaviour {
-        [SerializeField] private Piece _pieceGUI;
+        [SerializeField] private PieceGUI _pieceGUI;
         [SerializeField] private Board _board;
         [SerializeField] private Sprite[] _sprites;
 
@@ -19,9 +19,9 @@ namespace GUI.GameWindow {
 
         public void InitPieces() {
             GameManager.pieceManager = this;
-            foreach (Chess.Piece piece in GameManager.GetPieces()) {
+            foreach (Piece piece in GameManager.GetPieces()) {
                 var point = ((SquarePos)piece.index).ToVector2();
-                Piece p = Instantiate(_pieceGUI, point, Quaternion.identity, _board.GetSquare(piece.index).transform);
+                PieceGUI p = Instantiate(_pieceGUI, point, Quaternion.identity, _board.GetSquare(piece.index).transform);
                 p.piece = piece;
                 p.SetSprite(PieceTypeToSprite(piece.type));
                 PieceType color = piece.type & (PieceType.White | PieceType.Black);
@@ -34,7 +34,7 @@ namespace GUI.GameWindow {
                 return;
             }
             
-            foreach (Piece piece in _board.GetComponentsInChildren<Piece>()) {
+            foreach (PieceGUI piece in _board.GetComponentsInChildren<PieceGUI>()) {
                 Destroy(piece.gameObject);
             }
         }
