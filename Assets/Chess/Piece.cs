@@ -1,13 +1,11 @@
-﻿using static Utility.Notation;
-
-namespace Chess {
+﻿namespace Chess {
     public struct Piece {
         public Piece(PieceType type, int index) {
             this.type = type;
             this.index = index;
         }
 
-        public PieceType type { get; set; }
+        public PieceType type { get; }
         public int index { get; set; }
     }
 
