@@ -377,6 +377,7 @@ GameObject:
   - component: {fileID: 519420031}
   - component: {fileID: 519420029}
   - component: {fileID: 519420033}
+  - component: {fileID: 519420034}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -470,37 +471,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ffb0da765aab2914b986553b69a669e0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!1 &776632076
-GameObject:
+--- !u!114 &519420034
+MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 776632077}
-  m_Layer: 0
-  m_Name: GameObject
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &776632077
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 776632076}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 2.359224, y: 2.1716924, z: -1.4379864}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_GameObject: {fileID: 519420028}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56666c5a40171f54783dd416a44f42bf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_EventMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_MaxRayIntersections: 0
 --- !u!1 &910213882
 GameObject:
   m_ObjectHideFlags: 0
@@ -553,7 +539,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_FirstSelected: {fileID: 0}
   m_sendNavigationEvents: 1
-  m_DragThreshold: 10
+  m_DragThreshold: 1
 --- !u!4 &910213885
 Transform:
   m_ObjectHideFlags: 0
@@ -650,7 +636,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b593f759e07b9ba4691142ac4cb5d16e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _pieceGUI: {fileID: 3131569910913239204, guid: ca7e70395df2b804e971242be19d297f, type: 3}
+  _pieceGUI: {fileID: 0}
   _board: {fileID: 1039141448}
   _sprites:
   - {fileID: 21300000, guid: 93182ee8f701e644ab0664202ab4a247, type: 3}
@@ -1672,4 +1658,3 @@ SceneRoots:
   - {fileID: 2066750465}
   - {fileID: 2098606118}
   - {fileID: 910213885}
-  - {fileID: 776632077}

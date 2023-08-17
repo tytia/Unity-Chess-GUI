@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 using Utility;
 using GM = GUI.GameWindow.GameManager;
 
@@ -13,30 +14,25 @@ namespace GUI.GameWindow {
         public int to { get; }
     }
 
-    public class MoveHandler : MonoBehaviour {
+    public class MoveHandler : MonoBehaviour, IPointerDownHandler, IDragHandler, IEndDragHandler {
         private SpriteRenderer _sr;
         private Camera _cam;
 
         private void Awake() {
             _sr = gameObject.GetComponent<SpriteRenderer>();
             _cam = Camera.main;
-            // For some reason if the collider is put on the prefab, some pieces' colliders aren't initialized properly.
-            // The colliders are shown as active in the inspector, but mouse events don't work when using move methods.
-            // That is, the mouse events work when just printing a message, but not when moving the piece.
-            // Might have something to do with Unity input handling.
-            var boxCollider2D = gameObject.AddComponent<BoxCollider2D>();
-            boxCollider2D.size = new Vector2(10, 10);
         }
 
-        private void OnMouseDown() {
+        public void OnPointerDown(PointerEventData eventData) {
             _sr.sortingOrder = 1;
-        }
-
-        private void OnMouseDrag() {
             MoveToMouse();
         }
 
-        private void OnMouseUp() {
+        public void OnDrag(PointerEventData eventData) {
+            MoveToMouse();
+        }
+
+        public void OnEndDrag(PointerEventData eventData) {
             MoveToNearestSquare();
         }
 
