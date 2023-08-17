@@ -3,13 +3,14 @@ using Chess;
 
 namespace GUI.GameWindow {
     public static class GameManager {
-        private static Game _game = new();
+        private static readonly Game _game = Game.GetInstance();
         public static PieceManager pieceManager { get; set; }
 
         public static void StartNewGame(string fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1") {
-            _game = new Game(fen);
+            _game.LoadFromFEN(fen);
             pieceManager.RemovePieces();
             pieceManager.InitPieces();
+            SquareHighlighter.ClearHighlights();
         }
         
         public static ReadOnlyCollection<Piece> GetPieces() {

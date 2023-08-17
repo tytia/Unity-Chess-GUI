@@ -30,6 +30,7 @@ namespace Chess {
     }
     
     public class Game {
+        private static Game _instance;
         private readonly Piece?[] _board = new Piece?[64];
         private readonly List<Piece> _pieces = new(32);
         private Side _sideToMove;
@@ -40,8 +41,12 @@ namespace Chess {
         
         public ReadOnlyCollection<Piece> pieces => new(_pieces);
 
-        public Game(string fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR") {
+        private Game(string fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR") {
             LoadFromFEN(fen);
+        }
+
+        public static Game GetInstance() {
+            return _instance ??= new Game();
         }
         
         public void MovePiece(ref Piece piece, int toIndex) {
@@ -55,7 +60,7 @@ namespace Chess {
             _board[piece.index] = null;
         }
 
-        private void LoadFromFEN(in string fen) {
+        public void LoadFromFEN(in string fen) {
             // GUI input field will be validated before calling this method
             // game state defaults:
             _sideToMove = Side.White;
