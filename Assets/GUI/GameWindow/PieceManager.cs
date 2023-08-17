@@ -10,6 +10,7 @@ namespace GUI.GameWindow {
         [SerializeField] private Sprite[] _sprites;
 
         private void OnEnable() {
+            GameManager.pieceManager = this;
             InitPieces();
         }
 
@@ -18,7 +19,6 @@ namespace GUI.GameWindow {
         }
 
         public void InitPieces() {
-            GameManager.pieceManager = this;
             foreach (Piece piece in GameManager.GetPieces()) {
                 var point = ((SquarePos)piece.index).ToVector2();
                 PieceGUI p = Instantiate(_pieceGUI, point, Quaternion.identity, _board.GetSquare(piece.index).transform);

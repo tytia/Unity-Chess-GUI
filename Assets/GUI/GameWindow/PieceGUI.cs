@@ -7,7 +7,7 @@ namespace GUI.GameWindow {
         public ref Chess.Piece piece => ref _piece;
 
         private void Awake() {
-            _sr = gameObject.GetComponent<SpriteRenderer>();
+            _sr = GetComponent<SpriteRenderer>();
         }
         
         public void SetSprite(Sprite sprite) {
