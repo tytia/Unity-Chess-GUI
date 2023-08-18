@@ -48,7 +48,6 @@ namespace GUI.GameWindow {
 
             if (squareCollider != null && squareCollider.transform != transform.parent) {
                 foreach (PieceGUI p in squareCollider.GetComponentsInChildren<PieceGUI>()) {
-                    GM.CapturePiece(p);
                     Destroy(p.gameObject);
                 }
 

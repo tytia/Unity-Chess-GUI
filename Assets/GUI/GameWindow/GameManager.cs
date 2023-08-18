@@ -1,4 +1,8 @@
-﻿using System.Collections.ObjectModel;
+﻿/*
+ * An intermediary class between the Game class and the GUI, helping to keep Game and GUI logic separate.
+ */
+
+using System.Collections.ObjectModel;
 using Chess;
 
 namespace GUI.GameWindow {
@@ -21,10 +25,6 @@ namespace GUI.GameWindow {
             var move = new Move(pieceGUI.piece.index, toIndex);
             _game.MovePiece(ref pieceGUI.piece, toIndex); // this changes the index of pieceGUI.piece because ref
             return move;
-        }
-
-        public static void CapturePiece(PieceGUI pieceGUI) {
-            _game.CapturePiece(pieceGUI.piece);
         }
     }
 }
