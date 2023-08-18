@@ -1,22 +1,33 @@
 ﻿namespace Chess {
+    public enum PieceType : byte {
+        Pawn,
+        Knight,
+        Bishop,
+        Rook,
+        Queen,
+        King,
+    }
+    
+    public enum Side : byte {
+        White,
+        Black
+    }
+    
     public struct Piece {
-        public Piece(PieceType type, int index) {
+        public Piece(PieceType type, Side side, int index) {
             this.type = type;
+            this.side = side;
+            this.index = index;
+        }
+
+        public Piece((PieceType type, Side side) pieceInfo, int index) {
+            type = pieceInfo.type;
+            side = pieceInfo.side;
             this.index = index;
         }
 
         public PieceType type { get; }
+        public Side side { get; }
         public int index { get; set; }
-    }
-
-    public enum PieceType : byte {
-        Pawn = 0,
-        Knight = 1,
-        Bishop = 2,
-        Rook = 3,
-        Queen = 4,
-        King = 5,
-        White = 8,
-        Black = 16
     }
 }

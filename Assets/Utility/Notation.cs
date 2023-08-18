@@ -25,19 +25,19 @@ namespace Utility {
             return (int)(vec.x + vec.y * 8);
         }
 
-        public static readonly Dictionary<char, PieceType> charToPieceType = new() {
-            { 'P', PieceType.Pawn | PieceType.White },
-            { 'N', PieceType.Knight | PieceType.White },
-            { 'B', PieceType.Bishop | PieceType.White },
-            { 'R', PieceType.Rook | PieceType.White },
-            { 'Q', PieceType.Queen | PieceType.White },
-            { 'K', PieceType.King | PieceType.White },
-            { 'p', PieceType.Pawn | PieceType.Black },
-            { 'n', PieceType.Knight | PieceType.Black },
-            { 'b', PieceType.Bishop | PieceType.Black },
-            { 'r', PieceType.Rook | PieceType.Black },
-            { 'q', PieceType.Queen | PieceType.Black },
-            { 'k', PieceType.King | PieceType.Black }
+        public static readonly Dictionary<char, (PieceType, Side)> charToPieceInfo = new() {
+            { 'P', (PieceType.Pawn, Side.White) },
+            { 'N', (PieceType.Knight, Side.White) },
+            { 'B', (PieceType.Bishop, Side.White) },
+            { 'R', (PieceType.Rook, Side.White) },
+            { 'Q', (PieceType.Queen, Side.White) },
+            { 'K', (PieceType.King, Side.White) },
+            { 'p', (PieceType.Pawn, Side.Black) },
+            { 'n', (PieceType.Knight, Side.Black) },
+            { 'b', (PieceType.Bishop, Side.Black) },
+            { 'r', (PieceType.Rook, Side.Black) },
+            { 'q', (PieceType.Queen, Side.Black) },
+            { 'k', (PieceType.King, Side.Black) }
         };
 
         public static readonly Dictionary<char, CastlingRights> charToCastlingRights = new() {
@@ -64,7 +64,7 @@ namespace Utility {
             foreach (string rank in ranks) {
                 var files = 0;
                 foreach (char c in rank) {
-                    if (!charToPieceType.ContainsKey(c) && !Char.IsDigit(c)) {
+                    if (!charToPieceInfo.ContainsKey(c) && !Char.IsDigit(c)) {
                         return false;
                     }
 

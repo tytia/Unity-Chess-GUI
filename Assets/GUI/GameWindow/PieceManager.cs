@@ -23,9 +23,8 @@ namespace GUI.GameWindow {
                 var point = ((SquarePos)piece.index).ToVector2();
                 PieceGUI p = Instantiate(_pieceGUI, point, Quaternion.identity, _board.GetSquare(piece.index).transform);
                 p.piece = piece;
-                p.SetSprite(PieceTypeToSprite(piece.type));
-                PieceType color = piece.type & (PieceType.White | PieceType.Black);
-                p.name = color + " " + (piece.type ^ color);
+                p.SetSprite(PieceTypeToSprite(piece));
+                p.name = piece.side + " " + piece.type;
             }
         }
 
@@ -39,16 +38,12 @@ namespace GUI.GameWindow {
             }
         }
 
-        private Sprite PieceTypeToSprite(PieceType type) {
-            if (type.HasFlag(PieceType.White)) {
-                return _sprites[(int)(type ^ PieceType.White)];
-            }
-
-            if (type.HasFlag(PieceType.Black)) {
-                return _sprites[(int)(type ^ PieceType.Black) + 6];
-            }
-
-            throw new ArgumentException("Piece type must have a color");
+        private Sprite PieceTypeToSprite(Piece piece) {
+            return piece.side switch {
+                Side.White => _sprites[(int)piece.type],
+                Side.Black => _sprites[(int)piece.type + 6],
+                _ => throw new ArgumentException("Piece must belong to a side")
+            };
         }
     }
 }

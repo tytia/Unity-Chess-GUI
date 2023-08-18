@@ -14,11 +14,6 @@ using Utility;
 using static Utility.Notation;
 
 namespace Chess {
-    public enum Side : byte {
-        White,
-        Black
-    }
-
     [Flags]
     public enum CastlingRights : byte {
         None = 0,
@@ -81,7 +76,7 @@ namespace Chess {
                         file += c - '0';
                     }
                     else {
-                        _pieces.Add(new Piece(Notation.charToPieceType[c], i + file));
+                        _pieces.Add(new Piece(Notation.charToPieceInfo[c], i + file));
                         _board[i + file] = pieces.Last();
                         file++;
                     }
