@@ -25,19 +25,19 @@ namespace Utility {
             return (int)(vec.x + vec.y * 8);
         }
 
-        public static readonly Dictionary<char, (PieceType, Side)> charToPieceInfo = new() {
-            { 'P', (PieceType.Pawn, Side.White) },
-            { 'N', (PieceType.Knight, Side.White) },
-            { 'B', (PieceType.Bishop, Side.White) },
-            { 'R', (PieceType.Rook, Side.White) },
-            { 'Q', (PieceType.Queen, Side.White) },
-            { 'K', (PieceType.King, Side.White) },
-            { 'p', (PieceType.Pawn, Side.Black) },
-            { 'n', (PieceType.Knight, Side.Black) },
-            { 'b', (PieceType.Bishop, Side.Black) },
-            { 'r', (PieceType.Rook, Side.Black) },
-            { 'q', (PieceType.Queen, Side.Black) },
-            { 'k', (PieceType.King, Side.Black) }
+        public static readonly Dictionary<char, (PieceType, PieceColor)> charToPieceInfo = new() {
+            { 'P', (PieceType.Pawn, PieceColor.White) },
+            { 'N', (PieceType.Knight, PieceColor.White) },
+            { 'B', (PieceType.Bishop, PieceColor.White) },
+            { 'R', (PieceType.Rook, PieceColor.White) },
+            { 'Q', (PieceType.Queen, PieceColor.White) },
+            { 'K', (PieceType.King, PieceColor.White) },
+            { 'p', (PieceType.Pawn, PieceColor.Black) },
+            { 'n', (PieceType.Knight, PieceColor.Black) },
+            { 'b', (PieceType.Bishop, PieceColor.Black) },
+            { 'r', (PieceType.Rook, PieceColor.Black) },
+            { 'q', (PieceType.Queen, PieceColor.Black) },
+            { 'k', (PieceType.King, PieceColor.Black) }
         };
 
         public static readonly Dictionary<char, CastlingRights> charToCastlingRights = new() {

@@ -30,8 +30,8 @@ namespace Chess {
         private readonly List<Piece> _pieces = new(32);
         private int _halfMoveClock;
         private int _fullMoveClock;
-        public Side playerSide { get; private set; }
-        public Side sideToMove { get; private set; }
+        public PieceColor playerColor { get; private set; }
+        public PieceColor colorToMove { get; private set; }
         public CastlingRights castlingRights { get; private set; }
         public int? enPassantIndex { get; private set; }
         public bool analysisMode { get; set; } = false;
@@ -60,7 +60,7 @@ namespace Chess {
         public void LoadFromFEN(in string fen) {
             // GUI input field will be validated before calling this method
             // game state defaults:
-            sideToMove = Side.White;
+            colorToMove = PieceColor.White;
             castlingRights = CastlingRights.All;
             enPassantIndex = null;
             _halfMoveClock = 0;
@@ -86,7 +86,7 @@ namespace Chess {
             }
 
             if (fields.Length < 2) return;
-            sideToMove = playerSide = fields[1] == "w" ? Side.White : Side.Black;
+            colorToMove = playerColor = fields[1] == "w" ? PieceColor.White : PieceColor.Black;
             
             if (fields.Length < 3) return;
             castlingRights = CastlingRights.None;

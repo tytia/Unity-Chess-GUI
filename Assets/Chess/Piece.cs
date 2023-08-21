@@ -8,26 +8,26 @@
         King,
     }
     
-    public enum Side : byte {
+    public enum PieceColor : byte {
         White,
         Black
     }
     
     public struct Piece {
-        public Piece(PieceType type, Side side, int index) {
+        public Piece(PieceType type, PieceColor color, int index) {
             this.type = type;
-            this.side = side;
+            this.color = color;
             this.index = index;
         }
 
-        public Piece((PieceType type, Side side) pieceInfo, int index) {
+        public Piece((PieceType type, PieceColor color) pieceInfo, int index) {
             type = pieceInfo.type;
-            side = pieceInfo.side;
+            color = pieceInfo.color;
             this.index = index;
         }
 
         public PieceType type { get; }
-        public Side side { get; }
+        public PieceColor color { get; }
         public int index { get; set; }
     }
 }
