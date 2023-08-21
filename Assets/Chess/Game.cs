@@ -36,6 +36,7 @@ namespace Chess {
         public int? enPassantIndex { get; private set; }
         public bool analysisMode { get; set; } = false;
         
+        public ReadOnlyCollection<Piece?> board => new(_board);
         public ReadOnlyCollection<Piece> pieces => new(_pieces);
 
         private Game(string fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR") {
@@ -50,11 +51,33 @@ namespace Chess {
             _board[piece.index] = null;
             
             if (_board[toIndex] != null) {
-                _pieces.Remove(piece);
+                _pieces.Remove(_board[toIndex].Value);
             }
             
             piece.index = toIndex;
             _board[toIndex] = piece;
+            
+            IncrementState(piece.type);
+            CheckState();
+        }
+
+        private void IncrementState(PieceType pieceType) {
+            if (pieceType == PieceType.Pawn) {
+                _halfMoveClock = 0;
+            }
+            else {
+                _halfMoveClock++;
+            }
+            
+            if (colorToMove == PieceColor.Black) {
+                _fullMoveClock++;
+            }
+            
+            colorToMove = ~colorToMove;
+        }
+
+        private void CheckState() {
+            // TODO: Implement win/lose/draw logic
         }
 
         public void LoadFromFEN(in string fen) {
