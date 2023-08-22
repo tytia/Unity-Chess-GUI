@@ -1,16 +1,28 @@
+using Chess;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using Utility;
-using GM = GUI.GameWindow.GameManager;
 
 namespace GUI.GameWindow {
     public class MoveHandler : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDragHandler {
         private SpriteRenderer _sr;
+        private Piece _piece;
         private Camera _cam;
+        private Game _game;
 
         private void Awake() {
-            _sr = gameObject.GetComponent<SpriteRenderer>();
+            _sr = GetComponent<SpriteRenderer>();
             _cam = Camera.main;
+            _game = Game.GetInstance();
+        }
+
+        private void Start() {
+            // need to wait for piece to get properly initialised before getting it,
+            // which is why this is in Start() and not Awake()
+            _piece = GetComponent<PieceGUI>().piece;
+            if (_piece.color != _game.playerColor) {
+                enabled = false;
+            }
         }
 
         public void OnPointerDown(PointerEventData eventData) {
@@ -42,9 +54,9 @@ namespace GUI.GameWindow {
                 }
 
                 transform.parent = squareCollider.transform;
-                var pieceGUI = GetComponent<PieceGUI>();
-                Move move = GM.MovePiece(pieceGUI, squareCollider.transform.position.ToBoardIndex());
-                SquareHighlighter.HighlightMove(move);
+                int to = squareCollider.transform.position.ToBoardIndex();
+                SquareHighlighter.HighlightMove(_piece.index, to);
+                _game.MovePiece(ref _piece, to);
             }
 
             transform.position = transform.parent.position;

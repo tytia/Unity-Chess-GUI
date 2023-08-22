@@ -8,9 +8,13 @@ namespace GUI.GameWindow {
         [SerializeField] private PieceGUI _pieceGUI;
         [SerializeField] private Board _board;
         [SerializeField] private Sprite[] _sprites;
+        private Game _game;
+
+        private void Awake() {
+            _game = Game.GetInstance();
+        }
 
         private void OnEnable() {
-            GameManager.pieceManager = this;
             InitPieces();
         }
 
@@ -19,7 +23,7 @@ namespace GUI.GameWindow {
         }
 
         public void InitPieces() {
-            foreach (Piece piece in GameManager.GetPieces()) {
+            foreach (Piece piece in _game.pieces) {
                 var point = ((SquarePos)piece.index).ToVector2();
                 PieceGUI p = Instantiate(_pieceGUI, point, Quaternion.identity, _board.GetSquare(piece.index).transform);
                 p.piece = piece;
