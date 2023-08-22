@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Unity.VisualScripting;
-using UnityEngine.Animations;
 
 namespace Chess {
     public static class Moves {
