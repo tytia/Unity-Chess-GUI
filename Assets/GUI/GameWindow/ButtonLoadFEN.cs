@@ -27,7 +27,7 @@ namespace GUI.GameWindow {
             _game.LoadFromFEN(fenText);
             _pieceManager.RemovePieces();
             _pieceManager.InitPieces();
-            SquareHighlighter.ClearHighlights();
+            HighlightManager.ClearHighlights();
             
             _fenInput.text = "";
         }
