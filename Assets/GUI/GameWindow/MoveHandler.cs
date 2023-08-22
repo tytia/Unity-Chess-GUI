@@ -4,17 +4,7 @@ using Utility;
 using GM = GUI.GameWindow.GameManager;
 
 namespace GUI.GameWindow {
-    public readonly struct Move {
-        public Move(int from, int to) {
-            this.from = from;
-            this.to = to;
-        }
-
-        public int from { get; }
-        public int to { get; }
-    }
-
-    public class MoveHandler : MonoBehaviour, IPointerDownHandler, IDragHandler, IEndDragHandler {
+    public class MoveHandler : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDragHandler {
         private SpriteRenderer _sr;
         private Camera _cam;
 
@@ -32,7 +22,7 @@ namespace GUI.GameWindow {
             MoveToMouse();
         }
 
-        public void OnEndDrag(PointerEventData eventData) {
+        public void OnPointerUp(PointerEventData eventData) {
             MoveToNearestSquare();
         }
 
