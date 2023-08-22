@@ -68,7 +68,11 @@ namespace Chess {
                 _halfMoveClock++;
             }
             
-            if (colorToMove == PieceColor.Black) {
+            if (colorToMove == PieceColor.White) {
+                colorToMove = PieceColor.Black;
+            }
+            else {
+                colorToMove = PieceColor.White;
                 _fullMoveClock++;
             }
             
