@@ -7,22 +7,28 @@ namespace Chess {
         private static readonly Dictionary<int, int>[] _distanceToEdge = new Dictionary<int, int>[64];
 
         static Moves() {
+            InitDistanceToEdge();
+        }
+
+        private static void InitDistanceToEdge() {
             for (var i = 0; i < 64; i++) {
                 _distanceToEdge[i] = new Dictionary<int, int>(8) {
                     { -1, i % 8 }, // left
                     { 1, 7 - i % 8 }, // right
                     { -8, i / 8 }, // down
-                    { 8, 7 - i / 8 }, // up
-                    { 7, Math.Min(_distanceToEdge[i][8], _distanceToEdge[i][-1]) }, // up-left
-                    { 9, Math.Min(_distanceToEdge[i][8], _distanceToEdge[i][1]) }, // up-right
-                    { -9, Math.Min(_distanceToEdge[i][-8], _distanceToEdge[i][-1]) }, // down-left
-                    { -7, Math.Min(_distanceToEdge[i][-8], _distanceToEdge[i][1]) } // down-right
+                    { 8, 7 - i / 8 } // up
                 };
+                // We're self-referencing cardinal directions to calculate diagonals,
+                // therefore can't use collection initializer to initialize them all at once
+                _distanceToEdge[i][7] = Math.Min(_distanceToEdge[i][8], _distanceToEdge[i][-1]); // up-left
+                _distanceToEdge[i][9] = Math.Min(_distanceToEdge[i][8], _distanceToEdge[i][1]); // up-right
+                _distanceToEdge[i][-9] = Math.Min(_distanceToEdge[i][-8], _distanceToEdge[i][-1]); // down-left
+                _distanceToEdge[i][-7] = Math.Min(_distanceToEdge[i][-8], _distanceToEdge[i][1]); // down-right
             }
         }
 
         public static List<int> GetLegalSquares(this Piece piece) {
-            if (_game.playerColor != _game.colorToMove && !_game.analysisMode) {
+            if (piece.color != _game.colorToMove) {
                 return new List<int>();
             }
 
@@ -43,10 +49,10 @@ namespace Chess {
                     : new[] { -8, -16, -7, -9 });
 
             foreach (int offset in offsets) {
-                if (_distanceToEdge[index][offset] < 1) {
+                if (Math.Abs(offset) != 16 && _distanceToEdge[index][offset] < 1) {
                     continue;
                 }
-
+                
                 if (Math.Abs(offset) == 16 && !OnStartingRank(index)) {
                     continue;
                 }
@@ -96,10 +102,8 @@ namespace Chess {
 
                 int toIndex = index + offset;
                 if (_game.board[toIndex] == null || _game.board[toIndex].Value.color != _game.colorToMove) {
-                    continue;
+                    moves.Add(toIndex);
                 }
-
-                moves.Add(toIndex);
             }
 
             return moves;
