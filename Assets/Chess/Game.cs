@@ -10,7 +10,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using Utility;
 using static Utility.Notation;
 
 namespace Chess {
@@ -101,7 +100,7 @@ namespace Chess {
                         file += c - '0';
                     }
                     else {
-                        _pieces.Add(new Piece(Notation.charToPieceInfo[c], i + file));
+                        _pieces.Add(new Piece(charToPieceInfo[c], i + file));
                         _board[i + file] = pieces.Last();
                         file++;
                     }
@@ -115,7 +114,7 @@ namespace Chess {
             castlingRights = CastlingRights.None;
             if (fields[2] != "-") {
                 foreach (char c in fields[2]) {
-                    castlingRights |= Notation.charToCastlingRights[c];
+                    castlingRights |= charToCastlingRights[c];
                 }
             }
             
