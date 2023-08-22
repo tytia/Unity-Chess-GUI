@@ -8,7 +8,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using static Utility.Notation;
 
@@ -25,18 +24,16 @@ namespace Chess {
     
     public class Game {
         private static Game _instance;
-        private readonly Piece?[] _board = new Piece?[64];
-        private readonly List<Piece> _pieces = new(32);
         private int _halfMoveClock;
         private int _fullMoveClock;
+        public Piece?[] board { get; } = new Piece?[64];
+        public List<Piece> pieces { get; } = new(32);
         public PieceColor playerColor { get; private set; }
         public PieceColor colorToMove { get; private set; }
         public CastlingRights castlingRights { get; private set; }
         public int? enPassantIndex { get; private set; }
         public bool analysisMode { get; set; } = false;
         
-        public ReadOnlyCollection<Piece?> board => new(_board);
-        public ReadOnlyCollection<Piece> pieces => new(_pieces);
 
         private Game(string fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR") {
             LoadFromFEN(fen);
@@ -47,14 +44,14 @@ namespace Chess {
         }
         
         public void MovePiece(ref Piece piece, int toIndex) {
-            _board[piece.index] = null;
+            board[piece.index] = null;
             
-            if (_board[toIndex] != null) {
-                _pieces.Remove(_board[toIndex].Value);
+            if (board[toIndex] != null) {
+                pieces.Remove(board[toIndex].Value);
             }
             
             piece.index = toIndex;
-            _board[toIndex] = piece;
+            board[toIndex] = piece;
             
             IncrementState(piece.type);
             CheckState();
@@ -75,8 +72,6 @@ namespace Chess {
                 colorToMove = PieceColor.White;
                 _fullMoveClock++;
             }
-            
-            colorToMove = ~colorToMove;
         }
 
         private void CheckState() {
@@ -94,8 +89,8 @@ namespace Chess {
             
             string[] fields = fen.Split(' ');
 
-            Array.Clear(_board, 0, _board.Length);
-            _pieces.Clear();
+            Array.Clear(board, 0, board.Length);
+            pieces.Clear();
             string[] ranks = fields[0].Split('/');
             for (int i = (int)SquarePos.a8, j = 0; j < 8; i -= 8, j++) {
                 for (int fileIndex = 0, file = 0; fileIndex < ranks[j].Length && file < 8; fileIndex++) {
@@ -104,8 +99,8 @@ namespace Chess {
                         file += c - '0';
                     }
                     else {
-                        _pieces.Add(new Piece(charToPieceInfo[c], i + file));
-                        _board[i + file] = pieces.Last();
+                        pieces.Add(new Piece(charToPieceInfo[c], i + file));
+                        board[i + file] = pieces.Last();
                         file++;
                     }
                 }
