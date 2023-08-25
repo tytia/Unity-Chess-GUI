@@ -1,7 +1,23 @@
+/*
+ * This class is responsible for generating and making legal moves.
+ */
+
 using System;
 using System.Collections.Generic;
+using GUI.GameWindow;
+using static UnityEngine.Object;
 
 namespace Chess {
+    public struct Move {
+        public Piece piece { get; }
+        public int to { get; }
+        
+        public Move(Piece piece, int to) {
+            this.piece = piece;
+            this.to = to;
+        }
+    }
+    
     public static class Moves {
         private static readonly Game _game = Game.GetInstance();
         private static readonly Dictionary<int, int>[] _distanceToEdge = new Dictionary<int, int>[64];
@@ -155,31 +171,90 @@ namespace Chess {
             }
 
             if (_game.colorToMove == PieceColor.White) {
-                if (_game.castlingRights.HasFlag(CastlingRights.WhiteKingSide) && CanCastleKingSide(index)) {
+                if (_game.castlingRights.HasFlag(CastlingRights.WhiteKingSide) && CanCastleKingSide()) {
                     moves.Add(index + 2);
                 }
-                if (_game.castlingRights.HasFlag(CastlingRights.WhiteQueenSide) && CanCastleQueenSide(index)) {
+                if (_game.castlingRights.HasFlag(CastlingRights.WhiteQueenSide) && CanCastleQueenSide()) {
                     moves.Add(index - 2);
                 }
             }
             else {
-                if (_game.castlingRights.HasFlag(CastlingRights.BlackKingSide) && CanCastleKingSide(index)) {
+                if (_game.castlingRights.HasFlag(CastlingRights.BlackKingSide) && CanCastleKingSide()) {
                     moves.Add(index + 2);
                 }
-                if (_game.castlingRights.HasFlag(CastlingRights.BlackQueenSide) && CanCastleQueenSide(index)) {
+                if (_game.castlingRights.HasFlag(CastlingRights.BlackQueenSide) && CanCastleQueenSide()) {
                     moves.Add(index - 2);
                 }
             }
 
             return moves;
 
-            bool CanCastleKingSide(int i) {
-                return _game.board[i + 1] == null && _game.board[i + 2] == null;
+            bool CanCastleKingSide() {
+                return _game.board[index + 1] == null && _game.board[index + 2] == null;
             }
             
-            bool CanCastleQueenSide(int i) {
-                return _game.board[i - 1] == null && _game.board[i - 2] == null && _game.board[i - 3] == null;
+            bool CanCastleQueenSide() {
+                return _game.board[index - 1] == null && _game.board[index - 2] == null && _game.board[index - 3] == null;
             }
+        }
+        
+        public static void MovePiece(ref Piece piece, int to) {
+            _game.moveHistory.Add(new Move(piece, to)); // move needs to be added before piece's index gets changed
+            _game.board[piece.index] = null;
+
+            if (MoveIsCastle(piece, to)) {
+                Castle(piece.index);
+            }
+            else if (MoveIsEnPassant(piece, to)) {
+                EnPassant(piece.index);
+            }
+            else if (_game.board[to] != null) {
+                _game.pieces.Remove(_game.board[to].Value);
+            }
+
+            _game.pieces.Remove(piece);
+            piece.index = to;
+            _game.board[to] = piece;
+            _game.pieces.Add(piece);
+
+            _game.IncrementTurn();
+            return;
+
+            void Castle(int kingIndex) {
+                int rookTo = kingIndex + (to - kingIndex) / 2;
+                int rookPos = CastleTargetRookPos(kingIndex, to);
+                Piece rook = _game.board[rookPos]!.Value;
+                PieceGUI rookGUI = Board.GetPieceGUI(rookPos)!;
+
+                _game.pieces.Remove(rook);
+                rook.index = rookTo;
+                _game.board[rookTo] = rook;
+                _game.pieces.Add(rook);
+                
+                rookGUI.GetComponent<MoveHandler>().piece = rook;
+                rookGUI.transform.parent = Board.GetSquare(rookTo).transform;
+                rookGUI.transform.position = rookGUI.transform.parent.position;
+            }
+            
+            void EnPassant(int pawnIndex) {
+                int captureIndex = to - pawnIndex > 0 ? to - 8 : to + 8;
+                
+                _game.pieces.Remove(_game.board[captureIndex]!.Value);
+                _game.board[captureIndex] = null;
+                Destroy(Board.GetPieceGUI(captureIndex).gameObject);
+            }
+        }
+        
+        private static bool MoveIsCastle(Piece piece, int toIndex) {
+            return piece.type == PieceType.King && Math.Abs(piece.index - toIndex) == 2;
+        }
+        
+        private static int CastleTargetRookPos(int kingIndex, int toIndex) {
+            return toIndex > kingIndex ? kingIndex + 3 : kingIndex - 4;
+        }
+        
+        private static bool MoveIsEnPassant(Piece piece, int toIndex) {
+            return piece.type == PieceType.Pawn && toIndex == _game.enPassantIndex;
         }
     }
 }

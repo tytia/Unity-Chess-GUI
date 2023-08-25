@@ -11,12 +11,11 @@ namespace GUI.GameWindow {
         [SerializeField] private Color _lightCol;
         [SerializeField] private Color _darkCol;
         [SerializeField] private Color _legalMovesCol;
-        [SerializeField] private Board _board;
 
         private void Awake() {
-            _lightCol = Square.lightCol;
-            _darkCol = Square.darkCol;
-            _legalMovesCol = Square.legalMovesCol;
+            _lightCol = Square.lightColor;
+            _darkCol = Square.darkColor;
+            _legalMovesCol = Square.legalMovesColor;
         }
 
         private void OnValidate() {
@@ -27,7 +26,7 @@ namespace GUI.GameWindow {
         }
 
         private void UpdateSquares() {
-            foreach (Square sq in _board.squares) {
+            foreach (Square sq in Board.squares) {
                 Vector2 worldPos = sq.transform.position;
                 sq.color = (worldPos.x + worldPos.y) % 2 == 0 ? _darkCol : _lightCol;
             }
@@ -35,7 +34,7 @@ namespace GUI.GameWindow {
 
         private void UpdateHighlights() {
             foreach (Square sq in highlights) {
-                if (sq.isActiveAndEnabled && sq.color != Square.prevMoveCol) {
+                if (sq.isActiveAndEnabled && sq.color != Square.prevMoveColor) {
                     sq.color = _legalMovesCol;
                 }
             }

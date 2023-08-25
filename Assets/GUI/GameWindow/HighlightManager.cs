@@ -1,13 +1,16 @@
-﻿using System.Collections.ObjectModel;
+﻿using System.Collections.Generic;
+using System.Linq;
 using Chess;
 using UnityEngine;
 using static Utility.Notation;
+using static Chess.Moves;
 
 namespace GUI.GameWindow {
     public static class HighlightManager {
-        private static (int from, int to)? _prevMove;
+        private static (int from, int to)? _prevMoveHighlight;
         public static Piece? highlightedPiece { get; set; }
         public static Square[] highlights { get; } = new Square[64];
+        private static readonly List<Move> _moveHistory = Game.GetInstance().moveHistory;
         
         public static void InitHighlights(Square highlight) {
             Transform parent = GameObject.FindWithTag("Highlights").transform;
@@ -20,20 +23,21 @@ namespace GUI.GameWindow {
             }
         }
         
-        public static void HighlightMove(int from, int to) {
+        public static void HighlightPrevMove() {
+            int from = _moveHistory.Last().piece.index, to = _moveHistory.Last().to;
             Square fromSq = highlights[from];
             Square toSq = highlights[to];
 
-            if (_prevMove != null) {
-                highlights[_prevMove.Value.from].gameObject.SetActive(false);
-                highlights[_prevMove.Value.to].gameObject.SetActive(false);
+            if (_prevMoveHighlight != null) {
+                highlights[_prevMoveHighlight.Value.from].gameObject.SetActive(false);
+                highlights[_prevMoveHighlight.Value.to].gameObject.SetActive(false);
             }
 
             fromSq.gameObject.SetActive(true);
             toSq.gameObject.SetActive(true);
-            fromSq.color = toSq.color = Square.prevMoveCol;
+            fromSq.color = toSq.color = Square.prevMoveColor;
 
-            _prevMove = (from, to);
+            _prevMoveHighlight = (from, to);
         }
 
         public static void HighlightLegalMoves(Piece piece) {
@@ -43,18 +47,18 @@ namespace GUI.GameWindow {
             
             UnHighlightLegalMoves();
             highlights[piece.index].gameObject.SetActive(true);
-            highlights[piece.index].color = Square.legalMovesCol;
+            highlights[piece.index].color = Square.legalMovesColor;
 
             foreach (int index in piece.GetLegalSquares()) {
                 highlights[index].gameObject.SetActive(true);
-                highlights[index].color = Square.legalMovesCol;
+                highlights[index].color = Square.legalMovesColor;
             }
         }
 
         public static void UnHighlightLegalMoves() {
             ClearHighlights();
-            if (_prevMove != null) { // reapply previous move highlight if it existed
-                HighlightMove(_prevMove.Value.from, _prevMove.Value.to);
+            if (_moveHistory.Count > 0) { // reapply previous move highlight if it existed
+                HighlightPrevMove();
             }
 
             highlightedPiece = null;

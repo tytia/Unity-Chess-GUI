@@ -25,7 +25,7 @@ namespace Utility {
             return (int)(vec.x + vec.y * 8);
         }
 
-        public static readonly Dictionary<char, (PieceType, PieceColor)> charToPieceInfo = new() {
+        public static readonly Dictionary<char, (PieceType type, PieceColor color)> charToPieceInfo = new() {
             { 'P', (PieceType.Pawn, PieceColor.White) },
             { 'N', (PieceType.Knight, PieceColor.White) },
             { 'B', (PieceType.Bishop, PieceColor.White) },

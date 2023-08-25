@@ -28,7 +28,7 @@ namespace GUI.GameWindow {
                 TextMeshProUGUI lb = Instantiate(_label, point, Quaternion.identity, transform);
                 lb.text = pos.ToString()[0].ToString();
                 lb.alignment = TextAlignmentOptions.BottomRight;
-                lb.color = (point.x + point.y) % 2 == 0 ? Square.lightCol : _labelDarkCol;
+                lb.color = (point.x + point.y) % 2 == 0 ? Square.lightColor : _labelDarkCol;
                 lb.name = lb.text;
             }
         }
@@ -39,7 +39,7 @@ namespace GUI.GameWindow {
                 TextMeshProUGUI lb = Instantiate(_label, point, Quaternion.identity, transform);
                 lb.text = pos.ToString()[1].ToString();
                 lb.alignment = TextAlignmentOptions.TopLeft;
-                lb.color = (point.x + point.y) % 2 == 0 ? Square.lightCol : _labelDarkCol;
+                lb.color = (point.x + point.y) % 2 == 0 ? Square.lightColor : _labelDarkCol;
                 lb.name = lb.text;
             }
         }

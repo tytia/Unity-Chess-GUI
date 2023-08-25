@@ -1,4 +1,3 @@
-using System.Collections.ObjectModel;
 using UnityEngine;
 using static Utility.Notation;
 
@@ -7,9 +6,7 @@ namespace GUI.GameWindow {
         [SerializeField] private Square _square;
         [SerializeField] private Square _highlight;
         [SerializeField] private Transform _cam;
-        private readonly Square[] _squares = new Square[64];
-        
-        public ReadOnlyCollection<Square> squares => new(_squares);
+        public static Square[] squares { get; } = new Square[64];
 
         private void Awake() {
             InitBoard();
@@ -20,17 +17,21 @@ namespace GUI.GameWindow {
             for (var pos = SquarePos.a1; pos <= SquarePos.h8; pos++) {
                 var point = pos.ToVector2();
                 Square sq = Instantiate(_square, point, Quaternion.identity, transform);
-                sq.color = (point.x + point.y) % 2 == 0 ? Square.darkCol : Square.lightCol;
+                sq.color = (point.x + point.y) % 2 == 0 ? Square.darkColor : Square.lightColor;
                 sq.name = pos.ToString();
 
-                _squares[(int)pos] = sq;
+                squares[(int)pos] = sq;
             }
 
             _cam.position = new Vector3((float)8 / 2 - 0.5f, (float)8 / 2 - 0.5f, _cam.position.z);
         }
 
-        public Square GetSquare(int index) {
-            return _squares[index];
+        public static Square GetSquare(int index) {
+            return squares[index];
+        }
+        
+        public static PieceGUI GetPieceGUI(int index) {
+            return squares[index].GetComponentInChildren<PieceGUI>();
         }
     }
 }
