@@ -199,17 +199,17 @@ namespace Chess {
         }
         
         public static void MovePiece(ref Piece piece, int to) {
-            _game.moveHistory.Add(new Move(piece, to)); // move needs to be added before piece's index gets changed
+            var move = new Move(piece, to);
             _game.board[piece.index] = null;
 
-            if (MoveIsCastle(piece, to)) {
-                Castle(piece.index);
-            }
-            else if (MoveIsEnPassant(piece, to)) {
-                EnPassant(piece.index);
-            }
-            else if (_game.board[to] != null) {
+            if (_game.board[to] != null) {
                 _game.pieces.Remove(_game.board[to].Value);
+            }
+            else if (MoveIsCastle(move)) {
+                Castle(move.piece.index);
+            }
+            else if (MoveIsEnPassant(move)) {
+                EnPassant(move.piece.index);
             }
 
             _game.pieces.Remove(piece);
@@ -217,6 +217,7 @@ namespace Chess {
             _game.board[to] = piece;
             _game.pieces.Add(piece);
 
+            _game.moveHistory.Add(move);
             _game.IncrementTurn();
             return;
 
@@ -245,16 +246,31 @@ namespace Chess {
             }
         }
         
-        private static bool MoveIsCastle(Piece piece, int toIndex) {
-            return piece.type == PieceType.King && Math.Abs(piece.index - toIndex) == 2;
-        }
-        
         private static int CastleTargetRookPos(int kingIndex, int toIndex) {
             return toIndex > kingIndex ? kingIndex + 3 : kingIndex - 4;
         }
         
-        private static bool MoveIsEnPassant(Piece piece, int toIndex) {
-            return piece.type == PieceType.Pawn && toIndex == _game.enPassantIndex;
+        public static void PromotePawn(Piece pawn, PieceType type) {
+            if (pawn.type != PieceType.Pawn) {
+                throw new ArgumentException("Piece must be a pawn");
+            }
+            
+            Piece promoted = new(type, pawn.color, pawn.index);
+            _game.pieces.Remove(pawn);
+            _game.pieces.Add(promoted);
+            _game.board[pawn.index] = promoted;
+        }
+        
+        private static bool MoveIsCastle(Move move) {
+            return move.piece.type == PieceType.King && Math.Abs(move.piece.index - move.to) == 2;
+        }
+        
+        private static bool MoveIsEnPassant(Move move) {
+            return move.piece.type == PieceType.Pawn && move.to == _game.enPassantIndex;
+        }
+        
+        private static bool MoveIsPromotion(Move move) {
+            return move.piece.type == PieceType.Pawn && (move.to is < 8 or > 55);
         }
     }
 }
