@@ -31,11 +31,11 @@ namespace GUI.GameWindow {
         public void OnPointerDown(PointerEventData eventData) {
             _sr.sortingOrder = 1;
             HighlightLegalMoves(piece);
-            MoveToMouse();
+            FollowMouse();
         }
 
         public void OnDrag(PointerEventData eventData) {
-            MoveToMouse();
+            FollowMouse();
         }
 
         public void OnPointerUp(PointerEventData eventData) {
@@ -48,7 +48,7 @@ namespace GUI.GameWindow {
             }
         }
 
-        private void MoveToMouse() {
+        private void FollowMouse() {
             Vector3 mousePos = Input.mousePosition;
             mousePos.z = 0 - _cam.transform.position.z; // distance from camera
             transform.position = _cam.ScreenToWorldPoint(mousePos);
