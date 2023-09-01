@@ -3,23 +3,22 @@ using System.Linq;
 using Chess;
 using UnityEngine;
 using static Utility.Notation;
-using static Chess.Moves;
 
 namespace GUI.GameWindow {
     public static class HighlightManager {
         private static (int from, int to)? _prevMoveHighlight;
-        public static Piece? highlightedPiece { get; set; }
+        public static Piece? selectedPiece { get; set; }
         public static Square[] highlights { get; } = new Square[64];
         private static readonly List<Move> _moveHistory = Game.GetInstance().moveHistory;
         
         public static void InitHighlights(Square highlight) {
             Transform parent = GameObject.FindWithTag("Highlights").transform;
-            for (var pos = SquarePos.a1; pos <= SquarePos.h8; pos++) {
-                var point = pos.ToVector2();
+            for (var i = 0; i < 64; i++) {
+                var point = i.ToSquarePosVector2();
                 Square highlightSquare = Object.Instantiate(highlight, point, Quaternion.identity, parent);
-                highlightSquare.name = pos.ToString();
+                highlightSquare.name = i.ToString();
 
-                highlights[(int)pos] = highlightSquare;
+                highlights[i] = highlightSquare;
             }
         }
         
@@ -41,7 +40,7 @@ namespace GUI.GameWindow {
         }
 
         public static void HighlightLegalMoves(Piece piece) {
-            if (highlightedPiece.Equals(piece)) {
+            if (selectedPiece.Equals(piece)) {
                 return;
             }
             
@@ -61,7 +60,7 @@ namespace GUI.GameWindow {
                 HighlightPrevMove();
             }
 
-            highlightedPiece = null;
+            selectedPiece = null;
         }
 
         public static void ClearHighlights() {

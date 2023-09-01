@@ -6,6 +6,8 @@ using UnityEngine;
 
 namespace Utility {
     public static class Notation {
+        public const string StartingFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
+        
         public enum SquarePos : byte {
             a1, b1, c1, d1, e1, f1, g1, h1,
             a2, b2, c2, d2, e2, f2, g2, h2,
@@ -17,8 +19,8 @@ namespace Utility {
             a8, b8, c8, d8, e8, f8, g8, h8
         }
 
-        public static Vector2 ToVector2(this SquarePos pos) {
-            return new Vector2((int)pos % 8, (int)pos / 8);
+        public static Vector2 ToSquarePosVector2(this int index) {
+            return new Vector2(index % 8, index / 8);
         }
         
         public static int ToBoardIndex(this Vector3 vec) {

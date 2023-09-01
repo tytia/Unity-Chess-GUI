@@ -14,13 +14,13 @@ namespace GUI.GameWindow {
         }
 
         private void InitBoard() {
-            for (var pos = SquarePos.a1; pos <= SquarePos.h8; pos++) {
-                var point = pos.ToVector2();
+            for (var i = 0; i < 64; i++) {
+                var point = i.ToSquarePosVector2();
                 Square sq = Instantiate(_square, point, Quaternion.identity, transform);
                 sq.color = (point.x + point.y) % 2 == 0 ? Square.darkColor : Square.lightColor;
-                sq.name = pos.ToString();
+                sq.name = ((SquarePos)i).ToString();
 
-                squares[(int)pos] = sq;
+                squares[i] = sq;
             }
         }
 

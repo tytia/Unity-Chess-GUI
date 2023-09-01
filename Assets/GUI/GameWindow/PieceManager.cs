@@ -8,10 +8,12 @@ namespace GUI.GameWindow {
         [SerializeField] private PieceGUI _pieceGUI;
         [SerializeField] private Board _board;
         [SerializeField] private Sprite[] _sprites;
+        private static Sprite[] _spritesStatic;
         private static Game _game;
 
         private void Awake() {
             _game = Game.GetInstance();
+            _spritesStatic = _sprites;
         }
 
         private void OnEnable() {
@@ -24,10 +26,10 @@ namespace GUI.GameWindow {
 
         public void InitPieces() {
             foreach (Piece piece in _game.pieces) {
-                var point = ((SquarePos)piece.index).ToVector2();
+                var point = piece.index.ToSquarePosVector2();
                 PieceGUI p = Instantiate(_pieceGUI, point, Quaternion.identity, Board.GetSquare(piece.index).transform);
-                p.GetComponent<MoveHandler>().piece = piece;
-                p.SetSprite(PieceTypeToSprite(piece));
+                p.piece = piece;
+                p.SetSprite(PieceToSprite(piece));
                 p.name = piece.color + " " + piece.type;
             }
         }
@@ -42,10 +44,10 @@ namespace GUI.GameWindow {
             }
         }
 
-        private Sprite PieceTypeToSprite(Piece piece) {
+        public static Sprite PieceToSprite(Piece piece) {
             return piece.color switch {
-                PieceColor.White => _sprites[(int)piece.type],
-                PieceColor.Black => _sprites[(int)piece.type + 6],
+                PieceColor.White => _spritesStatic[(int)piece.type],
+                PieceColor.Black => _spritesStatic[(int)piece.type + 6],
                 _ => throw new ArgumentException("Piece must belong to a side")
             };
         }

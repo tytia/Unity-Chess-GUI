@@ -1,4 +1,3 @@
-using System;
 using TMPro;
 using UnityEngine;
 using Utility;
@@ -23,10 +22,10 @@ namespace GUI.GameWindow {
         }
 
         private void DrawFileLabels() {
-            for (var pos = SquarePos.a1; pos <= SquarePos.h1; pos++) {
-                var point = pos.ToVector2();
+            for (var i = 0; i <= 7; i++) {
+                var point = i.ToSquarePosVector2();
                 TextMeshProUGUI lb = Instantiate(_label, point, Quaternion.identity, transform);
-                lb.text = pos.ToString()[0].ToString();
+                lb.text = ((SquarePos)i).ToString()[0].ToString();
                 lb.alignment = TextAlignmentOptions.BottomRight;
                 lb.color = (point.x + point.y) % 2 == 0 ? Square.lightColor : _labelDarkCol;
                 lb.name = lb.text;
@@ -34,10 +33,10 @@ namespace GUI.GameWindow {
         }
 
         private void DrawRankLabels() {
-            for (var pos = SquarePos.a1; pos <= SquarePos.a8; pos += 8) {
-                var point = pos.ToVector2();
+            for (var i = 0; i <= 56; i += 8) {
+                var point = i.ToSquarePosVector2();
                 TextMeshProUGUI lb = Instantiate(_label, point, Quaternion.identity, transform);
-                lb.text = pos.ToString()[1].ToString();
+                lb.text = ((SquarePos)i).ToString()[1].ToString();
                 lb.alignment = TextAlignmentOptions.TopLeft;
                 lb.color = (point.x + point.y) % 2 == 0 ? Square.lightColor : _labelDarkCol;
                 lb.name = lb.text;

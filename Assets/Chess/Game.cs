@@ -10,7 +10,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using static Utility.Notation;
-using static Chess.Moves;
 
 namespace Chess {
     [Flags]
@@ -34,17 +33,21 @@ namespace Chess {
         public CastlingRights castlingRights { get; private set; }
         public int? enPassantIndex { get; private set; }
         public List<Move> moveHistory { get; } = new();
-        public bool analysisMode { get; set; } = false;
+        public bool analysisMode { get; set; }
 
 
-        private Game(string fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR") {
-            LoadFromFEN(fen);
-            moveHistory.Clear();
-            analysisMode = false;
+        private Game() {
+            StartNewGame();
         }
 
         public static Game GetInstance() {
             return _instance ??= new Game();
+        }
+        
+        public void StartNewGame(string fen = StartingFEN) {
+            LoadFromFEN(fen);
+            moveHistory.Clear();
+            analysisMode = true; // TODO: temporarily turned on for development, change this later
         }
 
         public void IncrementTurn() {

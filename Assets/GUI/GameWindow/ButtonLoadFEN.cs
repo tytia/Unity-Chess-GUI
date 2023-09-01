@@ -22,14 +22,17 @@ namespace GUI.GameWindow {
                 return;
             }
             
-            _errorText.SetActive(false);
+            StartNewGame(fenText);
             
-            _game.LoadFromFEN(fenText);
+            _fenInput.text = "";
+            _errorText.SetActive(false);
+        }
+        
+        private void StartNewGame(string fen) {
+            _game.StartNewGame(fen);
             _pieceManager.RemovePieces();
             _pieceManager.InitPieces();
             HighlightManager.ClearHighlights();
-            
-            _fenInput.text = "";
         }
     }
 }

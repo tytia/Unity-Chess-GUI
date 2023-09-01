@@ -3,15 +3,18 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using Utility;
 using static GUI.GameWindow.HighlightManager;
-using static Chess.Moves;
 
 namespace GUI.GameWindow {
     public class MoveHandler : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDragHandler {
         private SpriteRenderer _sr;
         private Camera _cam;
-        private Piece _piece;
+        private int _pieceIndex;
         private static Game _game;
-        public ref Piece piece => ref _piece;
+
+        public Piece piece {
+            get => _game.board[_pieceIndex]!.Value;
+            set => _pieceIndex = value.index;
+        }
 
         private void Awake() {
             _sr = GetComponent<SpriteRenderer>();
@@ -20,9 +23,8 @@ namespace GUI.GameWindow {
         }
 
         private void Start() {
-            // need to wait for piece to get properly initialised before getting it,
+            // need to wait for piece to be properly initialised before getting it,
             // which is why this is in Start() and not Awake()
-            _game.analysisMode = true; // TODO: temporarily turned on for development, remove this later
             if (piece.color != _game.playerColor && !_game.analysisMode) {
                 enabled = false;
             }
@@ -40,12 +42,17 @@ namespace GUI.GameWindow {
 
         public void OnPointerUp(PointerEventData eventData) {
             Square nearestSquare = MoveToNearestSquare();
-            if (highlightedPiece.Equals(piece) && nearestSquare.transform == transform.parent) {
+            if (selectedPiece.Equals(piece) && nearestSquare.transform == transform.parent) {
                 UnHighlightLegalMoves();
             }
             else {
-                highlightedPiece = piece;
+                selectedPiece = piece;
             }
+        }
+
+        private void MovePiece(int to) {
+            Moves.MovePiece(piece, to);
+            _pieceIndex = to;
         }
 
         private void FollowMouse() {
@@ -62,7 +69,7 @@ namespace GUI.GameWindow {
 
             if (piece.GetLegalSquares().Contains(to)) {
                 Destroy(Board.GetPieceGUI(to)?.gameObject);
-                MovePiece(ref piece, to);
+                MovePiece(to);
                 
                 HighlightPrevMove(); // needs to be after MovePiece() because the MovePiece() changes prevMove
                 UnHighlightLegalMoves();
@@ -77,13 +84,14 @@ namespace GUI.GameWindow {
         }
         
         private static void MovePieceGUI(PieceGUI pieceGUI, int to) {
-            Piece piece = pieceGUI.GetComponent<MoveHandler>().piece;
+            var moveHandler = pieceGUI.GetComponent<MoveHandler>();
+            Piece piece = moveHandler.piece;
             if (to == piece.index) {
                 throw new System.ArgumentException("Piece's index cannot be the same as the index it's moving to");
             }
             
             Destroy(Board.GetPieceGUI(to)?.gameObject);
-            MovePiece(ref piece, to);
+            moveHandler.MovePiece(to);
 
             HighlightPrevMove();
             

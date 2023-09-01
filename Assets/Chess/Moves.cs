@@ -198,30 +198,36 @@ namespace Chess {
             }
         }
         
-        public static void MovePiece(ref Piece piece, int to) {
+        public static void MovePiece(Piece piece, int to) {
             var move = new Move(piece, to);
             _game.board[piece.index] = null;
 
             if (_game.board[to] != null) {
                 _game.pieces.Remove(_game.board[to].Value);
             }
-            else if (MoveIsCastle(move)) {
-                Castle(move.piece.index);
-            }
-            else if (MoveIsEnPassant(move)) {
-                EnPassant(move.piece.index);
-            }
-
+            
             _game.pieces.Remove(piece);
             piece.index = to;
             _game.board[to] = piece;
             _game.pieces.Add(piece);
 
+            if (MoveIsCastle(move)) {
+                CastleRookMove(move.piece.index);
+            }
+            else if (MoveIsEnPassant(move)) {
+                EnPassant(move.piece.index);
+            }
+            else if (MoveIsPromotion(move)) {
+                // because PromotePawn() does not modify the argument pawn, but instead directly changes the type
+                // of the pawn on the board, we need to call it after the move is made.
+                PopupManager.ShowPawnPromotionPopup(piece);
+            }
+
             _game.moveHistory.Add(move);
             _game.IncrementTurn();
             return;
 
-            void Castle(int kingIndex) {
+            void CastleRookMove(int kingIndex) {
                 int rookTo = kingIndex + (to - kingIndex) / 2;
                 int rookPos = CastleTargetRookPos(kingIndex, to);
                 Piece rook = _game.board[rookPos]!.Value;
@@ -232,7 +238,7 @@ namespace Chess {
                 _game.board[rookTo] = rook;
                 _game.pieces.Add(rook);
                 
-                rookGUI.GetComponent<MoveHandler>().piece = rook;
+                rookGUI.piece = rook;
                 rookGUI.transform.parent = Board.GetSquare(rookTo).transform;
                 rookGUI.transform.position = rookGUI.transform.parent.position;
             }
@@ -254,11 +260,15 @@ namespace Chess {
             if (pawn.type != PieceType.Pawn) {
                 throw new ArgumentException("Piece must be a pawn");
             }
+
+            if (pawn.index is > 7 and < 56) {
+                throw new ArgumentException("Pawn must be on the last rank");
+            }
             
             Piece promoted = new(type, pawn.color, pawn.index);
+            _game.board[pawn.index] = promoted;
             _game.pieces.Remove(pawn);
             _game.pieces.Add(promoted);
-            _game.board[pawn.index] = promoted;
         }
         
         private static bool MoveIsCastle(Move move) {

@@ -23,5 +23,11 @@
             this.color = color;
             this.index = index;
         }
+        
+        public Piece(PieceType type, PieceColor color) {
+            this.type = type;
+            this.color = color;
+            index = -1;
+        }
     }
 }
