@@ -30,7 +30,7 @@ namespace GUI.GameWindow {
                 PieceGUI p = Instantiate(_pieceGUI, point, Quaternion.identity, Board.GetSquare(piece.index).transform);
                 p.piece = piece;
                 p.SetSprite(PieceToSprite(piece));
-                p.name = piece.color + " " + piece.type;
+                p.name = piece.ToString();
             }
         }
 

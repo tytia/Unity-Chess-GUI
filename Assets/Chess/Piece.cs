@@ -29,5 +29,9 @@
             this.color = color;
             index = -1;
         }
+
+        public readonly override string ToString() {
+            return $"{color} {type}";
+        }
     }
 }
