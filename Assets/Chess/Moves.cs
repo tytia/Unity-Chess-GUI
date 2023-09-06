@@ -23,6 +23,7 @@ namespace Chess {
     public static class Moves {
         private static readonly Game _game = Game.GetInstance();
         private static readonly Dictionary<int, int>[] _distanceToEdge = new Dictionary<int, int>[64];
+        public static event EventHandler MoveEnd;
 
         static Moves() {
             InitDistanceToEdge();
@@ -217,13 +218,13 @@ namespace Chess {
             _game.board[to] = piece;
             _game.pieces.Add(piece);
 
-            if (MoveIsCastle(move)) {
+            if (MoveWasCastle()) {
                 CastleRookMove(move.piece.index);
             }
-            else if (MoveIsEnPassant(move)) {
+            else if (MoveWasEnPassant()) {
                 EnPassant(move.piece.index);
             }
-            else if (MoveIsPromotion(move)) {
+            else if (MoveWasPromotion()) {
                 // because PromotePawn() does not modify the argument pawn, but instead directly changes the type
                 // of the pawn on the board, we need to call it after the move is made.
                 PopupManager.ShowPawnPromotionPopup(piece);
@@ -231,6 +232,7 @@ namespace Chess {
             }
 
             _game.IncrementTurn();
+            OnMoveEnd();
             return;
 
             void CastleRookMove(int kingIndex) {
@@ -256,6 +258,26 @@ namespace Chess {
                 _game.board[captureIndex] = null;
                 Destroy(Board.GetPieceGUI(captureIndex).gameObject);
             }
+        }
+        
+        public static void PromotePawn(Piece pawn, PieceType type) {
+            Assert.AreNotEqual(_game.board, _game.history.Last().board,
+                "Move is already finished; PromotePawn() should be called to conclude the move.");
+            if (pawn.type != PieceType.Pawn) {
+                throw new ArgumentException("Piece must be a pawn");
+            }
+
+            if (pawn.index is > 7 and < 56) {
+                throw new ArgumentException("Pawn must be on the last rank");
+            }
+
+            Piece promoted = new(type, pawn.color, pawn.index);
+            _game.board[pawn.index] = promoted;
+            _game.pieces.Remove(pawn);
+            _game.pieces.Add(promoted);
+            
+            _game.IncrementTurn();
+            OnMoveEnd();
         }
         
         public static void UndoMove(bool fullmove = false) {
@@ -286,35 +308,44 @@ namespace Chess {
             return toIndex > kingIndex ? kingIndex + 3 : kingIndex - 4;
         }
 
-        public static void PromotePawn(Piece pawn, PieceType type) {
-            Assert.AreNotEqual(_game.board, _game.history.Last().board,
-                "Move is already finished; PromotePawn() should be called to conclude the move.");
-            if (pawn.type != PieceType.Pawn) {
-                throw new ArgumentException("Piece must be a pawn");
+        public static bool MoveWasCapture() {
+            if (_game.prevMove == null) {
+                throw new InvalidOperationException("MoveWasCapture() called before any moves were made");
             }
-
-            if (pawn.index is > 7 and < 56) {
-                throw new ArgumentException("Pawn must be on the last rank");
-            }
-
-            Piece promoted = new(type, pawn.color, pawn.index);
-            _game.board[pawn.index] = promoted;
-            _game.pieces.Remove(pawn);
-            _game.pieces.Add(promoted);
             
-            _game.IncrementTurn();
+            Move move = _game.prevMove.Value;
+            return _game.history[_game.historyIndex - 1].board[move.to] != null;
         }
 
-        private static bool MoveIsCastle(Move move) {
+        private static bool MoveWasCastle() {
+            if (_game.prevMove == null) {
+                throw new InvalidOperationException("MoveWasCastle() called before any moves were made");
+            }
+            
+            Move move = _game.prevMove.Value;
             return move.piece.type == PieceType.King && Math.Abs(move.piece.index - move.to) == 2;
         }
 
-        private static bool MoveIsEnPassant(Move move) {
+        private static bool MoveWasEnPassant() {
+            if (_game.prevMove == null) {
+                throw new InvalidOperationException("MoveWasEnPassant() called before any moves were made");
+            }
+            
+            Move move = _game.prevMove.Value;
             return move.piece.type == PieceType.Pawn && move.to == _game.enPassantIndex;
         }
 
-        public static bool MoveIsPromotion(Move move) {
+        public static bool MoveWasPromotion() {
+            if (_game.prevMove == null) {
+                throw new InvalidOperationException("MoveWasPromotion() called before any moves were made");
+            }
+            
+            Move move = _game.prevMove.Value;
             return move.piece.type == PieceType.Pawn && (move.to is < 8 or > 55);
+        }
+
+        private static void OnMoveEnd() {
+            MoveEnd?.Invoke(typeof(Moves), EventArgs.Empty);
         }
     }
 }

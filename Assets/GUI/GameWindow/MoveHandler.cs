@@ -109,6 +109,11 @@ namespace GUI.GameWindow {
                 _game.ApplyState(_game.history.Last());
             }
             else {
+                if (Moves.MoveWasPromotion()) {
+                    pieceGUI.SetSprite(PieceManager.PieceToSprite(move.piece));
+                    pieceGUI.name = move.piece.ToString();
+                }
+                
                 Moves.UndoMove();
             }
             
@@ -121,11 +126,6 @@ namespace GUI.GameWindow {
                 p.piece = _game.board[move.to]!.Value;
                 p.SetSprite(PieceManager.PieceToSprite(p.piece));
                 p.name = p.piece.ToString();
-            }
-
-            if (Moves.MoveIsPromotion(move)) {
-                pieceGUI.SetSprite(PieceManager.PieceToSprite(move.piece));
-                pieceGUI.name = move.piece.ToString();
             }
         }
     }
