@@ -8,7 +8,7 @@ namespace GUI.GameWindow {
 
     public static class PopupManager {
         // popup scripts are assigned to static variables in their Start() methods
-        public static PawnPromotionPopup pawnPromotion { private get; set; }
+        public static PawnPromotionPopup pawnPromotion { get; set; }
 
         public static void ShowPawnPromotionPopup(Piece pawn) {
             pawnPromotion.Assign(pawn);

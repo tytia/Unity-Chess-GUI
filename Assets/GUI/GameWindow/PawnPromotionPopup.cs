@@ -1,4 +1,3 @@
-using System;
 using Chess;
 using UnityEngine;
 using UnityEngine.UI;
@@ -13,8 +12,11 @@ namespace GUI.GameWindow {
         private readonly PieceType[] _promotionOptions =
             { PieceType.Queen, PieceType.Rook, PieceType.Bishop, PieceType.Knight };
 
+        private readonly Button[] _squareButtons = new Button[4];
         private readonly Image[] _pieceImages = new Image[4];
         private Piece _pawn;
+        
+        public Button boardDim => _boardDim;
 
         // TODO: when board dim is clicked, cancel promotion and revert move
         /*
@@ -27,6 +29,7 @@ namespace GUI.GameWindow {
          */
 
         private void Awake() {
+            _boardDim.onClick.AddListener(CancelPromotion);
             for (var i = 0; i < _promotionOptions.Length; i++) {
                 Vector3 spawnPos = transform.position + (i * Vector3.down);
                 Button btn = Instantiate(_squareButtonPrefab, spawnPos, Quaternion.identity, transform);
@@ -36,10 +39,10 @@ namespace GUI.GameWindow {
                 PieceType targetType = _promotionOptions[i];
                 btn.onClick.AddListener(delegate { Promote(targetType); });
                 btn.name = targetType + "Button";
-
+                _squareButtons[i] = btn;
+                
                 pieceImage.sprite = PieceManager.PieceToSprite(new Piece(targetType, PieceColor.White));
                 pieceImage.name = targetType + "Image";
-
                 _pieceImages[i] = pieceImage;
             }
 
@@ -52,7 +55,12 @@ namespace GUI.GameWindow {
 
         public void Assign(Piece pawn) {
             if (_pawn.color != pawn.color) {
+                Vector3 direction = pawn.color == PieceColor.White ? Vector3.down : Vector3.up;
                 for (var i = 0; i < _promotionOptions.Length; i++) {
+                    Vector3 spawnPos = transform.position + (i * direction);
+                    _squareButtons[i].transform.position = spawnPos;
+                    _pieceImages[i].transform.position = spawnPos;
+                    
                     _pieceImages[i].sprite = PieceManager.PieceToSprite(new Piece(_promotionOptions[i], pawn.color));
                 }
             }
@@ -76,9 +84,15 @@ namespace GUI.GameWindow {
             Moves.PromotePawn(_pawn, promotionTarget);
             
             var pieceGUI = Board.GetPieceGUI(_pawn.index);
-            pieceGUI.SetSprite(PieceManager.PieceToSprite(new Piece(promotionTarget, _pawn.color)));
-            pieceGUI.name = _pawn.color + " " + promotionTarget;
+            var promoted = new Piece(promotionTarget, _pawn.color);
+            pieceGUI.SetSprite(PieceManager.PieceToSprite(promoted));
+            pieceGUI.name = promoted.ToString();
             
+            Show(false);
+        }
+
+        private void CancelPromotion() {
+            MoveHandler.UndoMove();
             Show(false);
         }
     }

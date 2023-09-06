@@ -4,20 +4,22 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using GUI.GameWindow;
+using UnityEngine.Assertions;
 using static UnityEngine.Object;
 
 namespace Chess {
-    public struct Move {
+    public readonly struct Move {
         public Piece piece { get; }
         public int to { get; }
-        
+
         public Move(Piece piece, int to) {
             this.piece = piece;
             this.to = to;
         }
     }
-    
+
     public static class Moves {
         private static readonly Game _game = Game.GetInstance();
         private static readonly Dictionary<int, int>[] _distanceToEdge = new Dictionary<int, int>[64];
@@ -68,7 +70,7 @@ namespace Chess {
                 if (Math.Abs(offset) != 16 && _distanceToEdge[index][offset] < 1) {
                     continue;
                 }
-                
+
                 if (Math.Abs(offset) == 16 && !OnStartingRank(index)) {
                     continue;
                 }
@@ -174,6 +176,7 @@ namespace Chess {
                 if (_game.castlingRights.HasFlag(CastlingRights.WhiteKingSide) && CanCastleKingSide()) {
                     moves.Add(index + 2);
                 }
+
                 if (_game.castlingRights.HasFlag(CastlingRights.WhiteQueenSide) && CanCastleQueenSide()) {
                     moves.Add(index - 2);
                 }
@@ -182,6 +185,7 @@ namespace Chess {
                 if (_game.castlingRights.HasFlag(CastlingRights.BlackKingSide) && CanCastleKingSide()) {
                     moves.Add(index + 2);
                 }
+
                 if (_game.castlingRights.HasFlag(CastlingRights.BlackQueenSide) && CanCastleQueenSide()) {
                     moves.Add(index - 2);
                 }
@@ -192,20 +196,22 @@ namespace Chess {
             bool CanCastleKingSide() {
                 return _game.board[index + 1] == null && _game.board[index + 2] == null;
             }
-            
+
             bool CanCastleQueenSide() {
-                return _game.board[index - 1] == null && _game.board[index - 2] == null && _game.board[index - 3] == null;
+                return _game.board[index - 1] == null && _game.board[index - 2] == null &&
+                       _game.board[index - 3] == null;
             }
         }
-        
+
         public static void MovePiece(Piece piece, int to) {
             var move = new Move(piece, to);
-            _game.board[piece.index] = null;
 
+            _game.prevMove = move;
+            _game.board[piece.index] = null;
             if (_game.board[to] != null) {
                 _game.pieces.Remove(_game.board[to].Value);
             }
-            
+
             _game.pieces.Remove(piece);
             piece.index = to;
             _game.board[to] = piece;
@@ -221,9 +227,9 @@ namespace Chess {
                 // because PromotePawn() does not modify the argument pawn, but instead directly changes the type
                 // of the pawn on the board, we need to call it after the move is made.
                 PopupManager.ShowPawnPromotionPopup(piece);
+                return; // PromotePawn() will conclude the move
             }
 
-            _game.moveHistory.Add(move);
             _game.IncrementTurn();
             return;
 
@@ -237,26 +243,52 @@ namespace Chess {
                 rook.index = rookTo;
                 _game.board[rookTo] = rook;
                 _game.pieces.Add(rook);
-                
+
                 rookGUI.piece = rook;
                 rookGUI.transform.parent = Board.GetSquare(rookTo).transform;
                 rookGUI.transform.position = rookGUI.transform.parent.position;
             }
-            
+
             void EnPassant(int pawnIndex) {
                 int captureIndex = to - pawnIndex > 0 ? to - 8 : to + 8;
-                
+
                 _game.pieces.Remove(_game.board[captureIndex]!.Value);
                 _game.board[captureIndex] = null;
                 Destroy(Board.GetPieceGUI(captureIndex).gameObject);
             }
         }
         
+        public static void UndoMove(bool fullmove = false) {
+            if (_game.history.Count == 0) {
+                throw new InvalidOperationException("UndoMove() called before any moves were made");
+            }
+            
+            if (fullmove && _game.colorToMove == _game.playerColor) {
+                _game.historyIndex -= 2;
+            }
+            else {
+                _game.historyIndex -= 1;
+            }
+            
+            _game.ApplyState(_game.history[_game.historyIndex]);
+        }
+        
+        public static void RedoMove() {
+            if (_game.historyIndex == _game.history.Count - 1) {
+                throw new InvalidOperationException("There are no more moves to redo");
+            }
+
+            _game.historyIndex += 1;
+            _game.ApplyState(_game.history[_game.historyIndex]);
+        }
+
         private static int CastleTargetRookPos(int kingIndex, int toIndex) {
             return toIndex > kingIndex ? kingIndex + 3 : kingIndex - 4;
         }
-        
+
         public static void PromotePawn(Piece pawn, PieceType type) {
+            Assert.AreNotEqual(_game.board, _game.history.Last().board,
+                "Move is already finished; PromotePawn() should be called to conclude the move.");
             if (pawn.type != PieceType.Pawn) {
                 throw new ArgumentException("Piece must be a pawn");
             }
@@ -264,22 +296,24 @@ namespace Chess {
             if (pawn.index is > 7 and < 56) {
                 throw new ArgumentException("Pawn must be on the last rank");
             }
-            
+
             Piece promoted = new(type, pawn.color, pawn.index);
             _game.board[pawn.index] = promoted;
             _game.pieces.Remove(pawn);
             _game.pieces.Add(promoted);
+            
+            _game.IncrementTurn();
         }
-        
+
         private static bool MoveIsCastle(Move move) {
             return move.piece.type == PieceType.King && Math.Abs(move.piece.index - move.to) == 2;
         }
-        
+
         private static bool MoveIsEnPassant(Move move) {
             return move.piece.type == PieceType.Pawn && move.to == _game.enPassantIndex;
         }
-        
-        private static bool MoveIsPromotion(Move move) {
+
+        public static bool MoveIsPromotion(Move move) {
             return move.piece.type == PieceType.Pawn && (move.to is < 8 or > 55);
         }
     }

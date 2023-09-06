@@ -1,3 +1,4 @@
+using System.Linq;
 using Chess;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -52,7 +53,23 @@ namespace GUI.GameWindow {
 
         private void MovePiece(int to) {
             Moves.MovePiece(piece, to);
+            HighlightPrevMove(); // needs to be after MovePiece() because MovePiece() changes prevMove
             _pieceIndex = to;
+        }
+
+        private static void MovePieceGUI(PieceGUI pieceGUI, int to) {
+            // it is important to note that this method only affects the GUI and updates
+            // which piece the specified PieceGUI is referring to
+            var moveHandler = pieceGUI.GetComponent<MoveHandler>();
+            if (to == moveHandler.piece.index) {
+                throw new System.ArgumentException("Piece's index should not be the same as the index it's moving to");
+            }
+
+            Destroy(Board.GetPieceGUI(to)?.gameObject);
+
+            pieceGUI.transform.parent = Board.GetSquare(to).transform;
+            pieceGUI.transform.position = pieceGUI.transform.parent.position;
+            moveHandler._pieceIndex = to;
         }
 
         private void FollowMouse() {
@@ -70,8 +87,6 @@ namespace GUI.GameWindow {
             if (piece.GetLegalSquares().Contains(to)) {
                 Destroy(Board.GetPieceGUI(to)?.gameObject);
                 MovePiece(to);
-                
-                HighlightPrevMove(); // needs to be after MovePiece() because the MovePiece() changes prevMove
                 UnHighlightLegalMoves();
 
                 transform.parent = squareCollider.transform;
@@ -79,24 +94,39 @@ namespace GUI.GameWindow {
 
             transform.position = transform.parent.position;
             _sr.sortingOrder = 0;
-            
+
             return squareCollider.GetComponent<Square>();
         }
-        
-        private static void MovePieceGUI(PieceGUI pieceGUI, int to) {
-            var moveHandler = pieceGUI.GetComponent<MoveHandler>();
-            Piece piece = moveHandler.piece;
-            if (to == piece.index) {
-                throw new System.ArgumentException("Piece's index cannot be the same as the index it's moving to");
+
+        public static void UndoMove() {
+            Move move = _game.prevMove!.Value;
+            PieceGUI pieceGUI = Board.GetPieceGUI(move.to);
+
+            MovePieceGUI(pieceGUI, move.piece.index);
+
+            if (PopupManager.pawnPromotion.boardDim.IsActive()) {
+                // cancel promotion
+                _game.ApplyState(_game.history.Last());
+            }
+            else {
+                Moves.UndoMove();
             }
             
-            Destroy(Board.GetPieceGUI(to)?.gameObject);
-            moveHandler.MovePiece(to);
-
             HighlightPrevMove();
-            
-            pieceGUI.transform.parent = Board.GetSquare(to).transform;
-            pieceGUI.transform.position = pieceGUI.transform.parent.position;
+
+            if (_game.board[move.to] != null) {
+                // instantiate captured piece
+                PieceGUI p = Instantiate(pieceGUI, move.to.ToSquarePosVector2(), Quaternion.identity,
+                    Board.GetSquare(move.to).transform);
+                p.piece = _game.board[move.to]!.Value;
+                p.SetSprite(PieceManager.PieceToSprite(p.piece));
+                p.name = p.piece.ToString();
+            }
+
+            if (Moves.MoveIsPromotion(move)) {
+                pieceGUI.SetSprite(PieceManager.PieceToSprite(move.piece));
+                pieceGUI.name = move.piece.ToString();
+            }
         }
     }
 }

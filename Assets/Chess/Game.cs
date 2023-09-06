@@ -8,6 +8,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using static Utility.Notation;
 
@@ -23,17 +24,44 @@ namespace Chess {
     }
 
     public class Game {
+        public record GameState {
+            public Piece?[] board { get; } = new Piece?[64];
+            public List<Piece> pieces { get; }
+            public PieceColor playerColor { get; }
+            public PieceColor colorToMove { get; }
+            public CastlingRights castlingRights { get; }
+            public int? enPassantIndex { get; }
+            public int halfmoveClock { get; }
+            public int fullmoveNumber { get; }
+            public Move? prevMove { get; }
+
+            public GameState(Game game) {
+                Array.Copy(game.board, board, 64);
+                pieces = new List<Piece>(game.pieces);
+                playerColor = game.playerColor;
+                colorToMove = game.colorToMove;
+                castlingRights = game.castlingRights;
+                enPassantIndex = game.enPassantIndex;
+                halfmoveClock = game._halfmoveClock;
+                fullmoveNumber = game._fullmoveNumber;
+                prevMove = game.prevMove;
+            }
+        }
+        
         private static Game _instance;
-        private int _halfMoveClock;
-        private int _fullMoveClock;
+        private int _halfmoveClock;
+        private int _fullmoveNumber;
+        private readonly List<GameState> _history = new();
         public Piece?[] board { get; } = new Piece?[64];
-        public List<Piece> pieces { get; } = new(32);
+        public List<Piece> pieces { get; private set; } = new(32);
         public PieceColor playerColor { get; private set; }
         public PieceColor colorToMove { get; private set; }
         public CastlingRights castlingRights { get; private set; }
         public int? enPassantIndex { get; private set; }
-        public List<Move> moveHistory { get; } = new();
+        public Move? prevMove { get; set; }
         public bool analysisMode { get; set; }
+        public int historyIndex { get; set; } = -1;
+        public ReadOnlyCollection<GameState> history => _history.AsReadOnly();
 
 
         private Game() {
@@ -46,20 +74,23 @@ namespace Chess {
         
         public void StartNewGame(string fen = StartingFEN) {
             LoadFromFEN(fen);
-            moveHistory.Clear();
+            _history.Clear();
+            prevMove = null;
             analysisMode = true; // TODO: temporarily turned on for development, change this later
+            historyIndex = -1;
+            RecordState();
         }
 
         public void IncrementTurn() {
-            if (moveHistory.Count == 0) {
+            if (prevMove == null) {
                 throw new InvalidOperationException("IncrementTurn() called before first move was made");
             }
 
-            if (moveHistory.Last().piece.type == PieceType.Pawn) {
-                _halfMoveClock = 0;
+            if (prevMove.Value.piece.type == PieceType.Pawn) {
+                _halfmoveClock = 0;
             }
             else {
-                _halfMoveClock++;
+                _halfmoveClock++;
             }
 
             if (colorToMove == PieceColor.White) {
@@ -67,21 +98,42 @@ namespace Chess {
             }
             else {
                 colorToMove = PieceColor.White;
-                _fullMoveClock++;
+                _fullmoveNumber++;
             }
             
             UpdateCastlingRights();
             UpdateEnPassantIndex();
-            CheckState();
+            RecordState();
         }
 
-        private void CheckState() {
+        public void CheckState() {
             // TODO: Implement win/lose/draw logic
+        }
+        
+        private void RecordState() {
+            if (historyIndex < _history.Count - 1) {
+                _history.RemoveRange(historyIndex + 1, _history.Count - (historyIndex + 1));
+            }
+            
+            _history.Add(new GameState(this));
+            historyIndex++;
+        }
+
+        public void ApplyState(GameState state) {
+            Array.Copy(state.board, board, 64);
+            pieces = new List<Piece>(state.pieces);
+            playerColor = state.playerColor;
+            colorToMove = state.colorToMove;
+            castlingRights = state.castlingRights;
+            enPassantIndex = state.enPassantIndex;
+            _halfmoveClock = state.halfmoveClock;
+            _fullmoveNumber = state.fullmoveNumber;
+            prevMove = state.prevMove;
         }
 
         private void UpdateCastlingRights() {
-            if (moveHistory.Last().piece.type == PieceType.King) {
-                castlingRights &= moveHistory.Last().piece.color == PieceColor.White
+            if (prevMove!.Value.piece.type == PieceType.King) {
+                castlingRights &= prevMove!.Value.piece.color == PieceColor.White
                     ? ~CastlingRights.WhiteKingSide & ~CastlingRights.WhiteQueenSide
                     : ~CastlingRights.BlackKingSide & ~CastlingRights.BlackQueenSide;
             }
@@ -100,8 +152,8 @@ namespace Chess {
         }
         
         private void UpdateEnPassantIndex() {
-            Piece prevPiece = moveHistory.Last().piece;
-            int toIndex = moveHistory.Last().to;
+            Piece prevPiece = prevMove!.Value.piece;
+            int toIndex = prevMove!.Value.to;
             if (prevPiece.type == PieceType.Pawn && Math.Abs(prevPiece.index - toIndex) == 16) {
                 enPassantIndex = prevPiece.index + (toIndex - prevPiece.index) / 2;
             }
@@ -110,14 +162,13 @@ namespace Chess {
             }
         }
 
-        public void LoadFromFEN(in string fen) {
-            // GUI input field will be validated before calling this method
+        private void LoadFromFEN(in string fen) {
             // game state defaults:
             colorToMove = PieceColor.White;
             castlingRights = CastlingRights.All;
             enPassantIndex = null;
-            _halfMoveClock = 0;
-            _fullMoveClock = 1;
+            _halfmoveClock = 0;
+            _fullmoveNumber = 1;
 
             string[] fields = fen.Split(' ');
 
@@ -154,9 +205,9 @@ namespace Chess {
             enPassantIndex = fields[3] == "-" ? null : (int)Enum.Parse<SquarePos>(fields[3]);
 
             if (fields.Length < 5) return;
-            _halfMoveClock = Int32.Parse(fields[4]);
+            _halfmoveClock = Int32.Parse(fields[4]);
 
-            _fullMoveClock = fields.Length < 6 ? (_halfMoveClock / 2) + 1 : Int32.Parse(fields[5]);
+            _fullmoveNumber = fields.Length < 6 ? (_halfmoveClock / 2) + 1 : Int32.Parse(fields[5]);
         }
     }
 }

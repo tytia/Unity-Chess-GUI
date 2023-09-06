@@ -9,7 +9,8 @@ namespace GUI.GameWindow {
         private static (int from, int to)? _prevMoveHighlight;
         public static Piece? selectedPiece { get; set; }
         public static Square[] highlights { get; } = new Square[64];
-        private static readonly List<Move> _moveHistory = Game.GetInstance().moveHistory;
+        
+        private static Move? prevMove => Game.GetInstance().prevMove;
         
         public static void InitHighlights(Square highlight) {
             Transform parent = GameObject.FindWithTag("Highlights").transform;
@@ -21,22 +22,24 @@ namespace GUI.GameWindow {
                 highlights[i] = highlightSquare;
             }
         }
-        
-        public static void HighlightPrevMove() {
-            int from = _moveHistory.Last().piece.index, to = _moveHistory.Last().to;
-            Square fromSq = highlights[from];
-            Square toSq = highlights[to];
 
+        public static void HighlightPrevMove() {
             if (_prevMoveHighlight != null) {
                 highlights[_prevMoveHighlight.Value.from].gameObject.SetActive(false);
                 highlights[_prevMoveHighlight.Value.to].gameObject.SetActive(false);
             }
 
-            fromSq.gameObject.SetActive(true);
-            toSq.gameObject.SetActive(true);
-            fromSq.color = toSq.color = Square.prevMoveColor;
+            if (prevMove != null) {
+                int from = prevMove.Value.piece.index, to = prevMove.Value.to;
+                Square fromSq = highlights[from];
+                Square toSq = highlights[to];
 
-            _prevMoveHighlight = (from, to);
+                fromSq.gameObject.SetActive(true);
+                toSq.gameObject.SetActive(true);
+                fromSq.color = toSq.color = Square.prevMoveColor;
+
+                _prevMoveHighlight = (from, to);
+            }
         }
 
         public static void HighlightLegalMoves(Piece piece) {
@@ -56,10 +59,8 @@ namespace GUI.GameWindow {
 
         public static void UnHighlightLegalMoves() {
             ClearHighlights();
-            if (_moveHistory.Count > 0) { // reapply previous move highlight if it existed
-                HighlightPrevMove();
-            }
-
+            HighlightPrevMove();
+            
             selectedPiece = null;
         }
 
