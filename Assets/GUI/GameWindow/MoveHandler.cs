@@ -102,7 +102,7 @@ namespace GUI.GameWindow {
             Move move = _game.prevMove!.Value;
             PieceGUI pieceGUI = Board.GetPieceGUI(move.to);
 
-            MovePieceGUI(pieceGUI, move.piece.index);
+            MovePieceGUI(pieceGUI, move.from);
 
             if (PopupManager.pawnPromotion.boardDim.IsActive()) {
                 // cancel promotion

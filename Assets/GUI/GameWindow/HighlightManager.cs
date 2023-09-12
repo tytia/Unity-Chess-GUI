@@ -30,7 +30,7 @@ namespace GUI.GameWindow {
             }
 
             if (prevMove != null) {
-                int from = prevMove.Value.piece.index, to = prevMove.Value.to;
+                int from = prevMove.Value.from, to = prevMove.Value.to;
                 Square fromSq = highlights[from];
                 Square toSq = highlights[to];
 

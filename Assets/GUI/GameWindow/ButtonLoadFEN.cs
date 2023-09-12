@@ -30,6 +30,7 @@ namespace GUI.GameWindow {
         
         private void StartNewGame(string fen) {
             _game.StartNewGame(fen);
+            Moves.RefreshData();
             _pieceManager.RemovePieces();
             _pieceManager.InitPieces();
             HighlightManager.ClearHighlights();

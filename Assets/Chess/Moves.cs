@@ -13,6 +13,7 @@ namespace Chess {
     public readonly struct Move {
         public Piece piece { get; }
         public int to { get; }
+        public int from => piece.index;
 
         public Move(Piece piece, int to) {
             this.piece = piece;
@@ -42,6 +43,11 @@ namespace Chess {
 
         static Moves() {
             InitDistanceToEdge();
+            InitKingData();
+            UpdateMoveData();
+        }
+
+        public static void RefreshData() {
             InitKingData();
             UpdateMoveData();
         }
@@ -154,7 +160,7 @@ namespace Chess {
             return 0; // not a ray direction
         }
 
-        private static bool IsPiecePinned(int index) {
+        private static bool PieceIsPinned(int index) {
             int dir = GetRayDirFromKing(index);
             if (dir != 0) {
                 int square = index;
@@ -188,7 +194,7 @@ namespace Chess {
 
             if (checkedBy.Count == 1) {
                 // if piece is pinned, return false
-                if (IsPiecePinned(from)) {
+                if (PieceIsPinned(from)) {
                     return false;
                 }
 
@@ -200,8 +206,20 @@ namespace Chess {
             }
 
             // if piece is pinned, it can take the checking piece or move along the king ray
-            if (IsPiecePinned(from)) {
+            if (PieceIsPinned(from)) {
                 return _kingRays[(int)_game.colorToMove][GetRayDirFromKing(from)].Contains(to);
+            }
+            
+            // if move was en passant, we need to make sure that the taken pawn was not pinned
+            if (_game.board[from]!.Value.type == PieceType.Pawn && to == _game.enPassantIndex) {
+                Piece temp = _game.board[from].Value;
+                int targetPawnIndex = to - from > 0 ? _game.enPassantIndex.Value - 8 : _game.enPassantIndex.Value + 8;
+                
+                _game.board[from] = null;
+                bool isLegal = !PieceIsPinned(targetPawnIndex);
+                _game.board[from] = temp;
+                
+                return isLegal;
             }
 
             // otherwise, piece can move anywhere
@@ -393,10 +411,10 @@ namespace Chess {
             _game.pieces.Add(piece);
 
             if (MoveWasCastle()) {
-                CastleRookMove(move.piece.index);
+                CastleRookMove(move.from);
             }
             else if (MoveWasEnPassant()) {
-                EnPassant(move.piece.index);
+                EnPassant(move.from);
             }
             else if (MoveWasPromotion()) {
                 // because PromotePawn() does not modify the argument pawn, but instead directly changes the type
@@ -495,7 +513,7 @@ namespace Chess {
             }
 
             Move move = _game.prevMove.Value;
-            return move.piece.type == PieceType.King && Math.Abs(move.piece.index - move.to) == 2;
+            return move.piece.type == PieceType.King && Math.Abs(move.from - move.to) == 2;
         }
 
         private static bool MoveWasEnPassant() {
