@@ -18,7 +18,10 @@ namespace Audio {
         }
 
         private void PlayMoveSfx(object sender, EventArgs e) {
-            if (Moves.MoveWasPromotion()) {
+            if (Moves.checkedBy.Count != 0) {
+                _audioSource.PlayOneShot(_check);
+            }
+            else if (Moves.MoveWasPromotion()) {
                 _audioSource.PlayOneShot(_promote);
             }
             else if (Moves.MoveWasCapture()) {

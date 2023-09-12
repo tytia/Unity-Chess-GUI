@@ -22,11 +22,39 @@ namespace Chess {
 
     public static class Moves {
         private static readonly Game _game = Game.GetInstance();
+
         private static readonly Dictionary<int, int>[] _distanceToEdge = new Dictionary<int, int>[64];
+
+        // we can use the index as a key because there can only be one piece on a square at a time
+        private static readonly Dictionary<int, HashSet<int>> _legalMoves = new();
+        private static readonly HashSet<int> _attackedSquares = new();
+        private static readonly int[] _kingIndexes = new int[2];
+        private static readonly Dictionary<int, HashSet<int>>[] _kingRays = new Dictionary<int, HashSet<int>>[2];
+
+        private static readonly Dictionary<PieceType, int[]> _slidingPieceDirections = new() {
+            { PieceType.Bishop, new[] { -9, -7, 7, 9 } },
+            { PieceType.Rook, new[] { -8, -1, 1, 8 } },
+            { PieceType.Queen, new[] { -9, -8, -7, -1, 1, 7, 8, 9 } }
+        };
+
+        public static List<Piece> checkedBy { get; } = new(2);
         public static event EventHandler MoveEnd;
 
         static Moves() {
             InitDistanceToEdge();
+            InitKingData();
+            UpdateMoveData();
+        }
+
+        private static void OnMoveEnd() {
+            _game.IncrementTurn();
+            UpdateKingData();
+            UpdateMoveData();
+            MoveEnd?.Invoke(typeof(Moves), EventArgs.Empty);
+        }
+
+        public static HashSet<int> GetLegalSquares(this Piece piece) {
+            return piece.color == _game.colorToMove ? _legalMoves[piece.index] : new HashSet<int>();
         }
 
         private static void InitDistanceToEdge() {
@@ -46,24 +74,154 @@ namespace Chess {
             }
         }
 
-        public static List<int> GetLegalSquares(this Piece piece) {
-            if (piece.color != _game.colorToMove) {
-                return new List<int>();
+        private static void InitKingData() {
+            _kingRays[0] = new Dictionary<int, HashSet<int>>();
+            _kingRays[1] = new Dictionary<int, HashSet<int>>();
+            foreach (Piece piece in _game.pieces) {
+                if (piece.type == PieceType.King) {
+                    _kingIndexes[(int)piece.color] = piece.index;
+                    UpdateKingRays(piece);
+                }
+            }
+        }
+
+        private static void UpdateKingData() {
+            if (_game.prevMove == null) {
+                throw new InvalidOperationException("UpdateKingData() called before any moves were made");
             }
 
+            Move prevMove = _game.prevMove.Value;
+            if (prevMove.piece.type == PieceType.King) {
+                _kingIndexes[(int)prevMove.piece.color] = prevMove.to;
+                UpdateKingRays(prevMove.piece);
+            }
+        }
+
+        private static void UpdateKingRays(Piece king) {
+            var directions = Array.AsReadOnly(new[] { -9, -8, -7, -1, 1, 7, 8, 9 });
+
+            foreach (int dir in directions) {
+                _kingRays[(int)king.color][dir] = new HashSet<int>();
+                int square = king.index;
+                for (var _ = 0; _ < _distanceToEdge[king.index][dir]; _++) {
+                    square += dir;
+                    _kingRays[(int)king.color][dir].Add(square);
+                }
+            }
+        }
+
+        private static void UpdateMoveData() {
+            _legalMoves.Clear();
+            _attackedSquares.Clear();
+            checkedBy.Clear();
+
+            // we need to check for checks before, in order to generate correct legal moves
+            foreach (Piece piece in _game.pieces) {
+                if (piece.color != _game.colorToMove) {
+                    HashSet<int> moves = GetMoves(piece, getProtects: true);
+                    if (moves.Contains(_kingIndexes[(int)_game.colorToMove])) {
+                        checkedBy.Add(piece);
+                    }
+
+                    _attackedSquares.UnionWith(moves);
+                }
+            }
+
+            foreach (Piece piece in _game.pieces) {
+                if (piece.color == _game.colorToMove) {
+                    _legalMoves[piece.index] = GetMoves(piece);
+                }
+            }
+        }
+
+        private static HashSet<int> GetMoves(Piece piece, bool getProtects = false) {
             return piece.type switch {
-                PieceType.Pawn => GetPawnMoves(piece.index),
-                PieceType.Knight => GetKnightMoves(piece.index),
-                PieceType.Bishop or PieceType.Rook or PieceType.Queen => GetSlidingMoves(piece),
-                PieceType.King => GetKingMoves(piece.index),
-                _ => throw new ArgumentOutOfRangeException(nameof(piece.type), "Piece type not recognized")
+                PieceType.Pawn => GetPawnMoves(piece.index, piece.color, getProtects),
+                PieceType.Knight => GetKnightMoves(piece.index, getProtects),
+                PieceType.Bishop or PieceType.Rook or PieceType.Queen => GetSlidingMoves(piece, getProtects),
+                PieceType.King => GetKingMoves(piece.index, getProtects),
+                _ => throw new ArgumentOutOfRangeException(nameof(piece.type), "Invalid piece type")
             };
         }
 
-        private static List<int> GetPawnMoves(int index) {
-            List<int> moves = new();
+        private static int GetRayDirFromKing(int index) {
+            foreach ((int dir, HashSet<int> ray) in _kingRays[(int)_game.colorToMove]) {
+                if (ray.Contains(index)) {
+                    return dir;
+                }
+            }
+
+            return 0; // not a ray direction
+        }
+
+        private static bool IsPiecePinned(int index) {
+            int dir = GetRayDirFromKing(index);
+            if (dir != 0) {
+                int square = index;
+                for (var _ = 0; _ < _distanceToEdge[index][dir]; _++) {
+                    square += dir;
+                    if (_game.board[square] != null) {
+                        Piece piece = _game.board[square]!.Value;
+                        if (piece.color == _game.colorToMove) {
+                            // friendly piece blocking the ray
+                            break;
+                        }
+
+                        if (_slidingPieceDirections.ContainsKey(piece.type) &&
+                            _slidingPieceDirections[piece.type].Contains(dir)) {
+                            // enemy sliding piece pinning the piece
+                            return true;
+                        }
+
+                        break;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        private static bool MoveIsCheckLegal(int from, int to) {
+            if (checkedBy.Count > 2) {
+                throw new InvalidOperationException("There are more than 2 pieces checking the king");
+            }
+
+            if (checkedBy.Count == 1) {
+                // if piece is pinned, return false
+                if (IsPiecePinned(from)) {
+                    return false;
+                }
+
+                // otherwise, piece can take the checking piece or block the check (if sliding piece)
+                return to == checkedBy[0].index ||
+                       (_slidingPieceDirections.ContainsKey(_game.board[checkedBy[0].index]!.Value.type) &&
+                        _kingRays[(int)_game.colorToMove][GetRayDirFromKing(checkedBy[0].index)].Contains(to) &&
+                        to > _kingIndexes[(int)_game.colorToMove] == to < checkedBy[0].index);
+            }
+
+            // if piece is pinned, it can take the checking piece or move along the king ray
+            if (IsPiecePinned(from)) {
+                return _kingRays[(int)_game.colorToMove][GetRayDirFromKing(from)].Contains(to);
+            }
+
+            // otherwise, piece can move anywhere
+            return true;
+        }
+
+        private static void AddMoveIfLegal(this HashSet<int> moves, int from, int to) {
+            if (MoveIsCheckLegal(from, to)) {
+                moves.Add(to);
+            }
+        }
+
+        private static HashSet<int> GetPawnMoves(int index, PieceColor color, bool getProtects = false) {
+            if (checkedBy.Count == 2) {
+                return new HashSet<int>();
+            }
+
+            HashSet<int> moves = new();
             var offsets =
-                Array.AsReadOnly(_game.colorToMove == PieceColor.White
+                Array.AsReadOnly(color == PieceColor.White
                     ? new[] { 8, 16, 7, 9 }
                     : new[] { -8, -16, -7, -9 });
 
@@ -76,18 +234,18 @@ namespace Chess {
                     continue;
                 }
 
-                int toIndex = index + offset;
-                bool existingPiece = _game.board[toIndex] != null;
+                int to = index + offset;
+                bool existingPiece = _game.board[to] != null;
                 switch (Math.Abs(offset)) {
                     case 8 when !existingPiece:
-                        moves.Add(toIndex);
+                        moves.AddMoveIfLegal(index, to);
                         break;
-                    case 16 when !existingPiece && _game.board[toIndex - (offset / 2)] == null:
-                        moves.Add(toIndex);
+                    case 16 when !existingPiece && _game.board[to - (offset / 2)] == null:
+                        moves.AddMoveIfLegal(index, to);
                         break;
-                    case 7 or 9 when (existingPiece && _game.board[toIndex].Value.color != _game.colorToMove) ||
-                                     toIndex == _game.enPassantIndex:
-                        moves.Add(toIndex);
+                    case 7 or 9 when (existingPiece && _game.board[to].Value.color != color) ||
+                                     to == _game.enPassantIndex || getProtects:
+                        moves.AddMoveIfLegal(index, to);
                         break;
                 }
             }
@@ -95,12 +253,16 @@ namespace Chess {
             return moves;
 
             bool OnStartingRank(int i) {
-                return _game.colorToMove == PieceColor.White ? i is >= 8 and <= 15 : i is >= 48 and <= 55;
+                return color == PieceColor.White ? i is >= 8 and <= 15 : i is >= 48 and <= 55;
             }
         }
 
-        private static List<int> GetKnightMoves(int index) {
-            List<int> moves = new();
+        private static HashSet<int> GetKnightMoves(int index, bool getProtects = false) {
+            if (checkedBy.Count == 2) {
+                return new HashSet<int>();
+            }
+
+            HashSet<int> moves = new();
             var offsets = Array.AsReadOnly(new[] { -17, -15, -10, -6, 6, 10, 15, 17 });
             Dictionary<int, int> dist = _distanceToEdge[index];
             var isValidOffset = new Dictionary<int, bool>(8) {
@@ -119,47 +281,50 @@ namespace Chess {
                     continue;
                 }
 
-                int toIndex = index + offset;
-                if (_game.board[toIndex] == null || _game.board[toIndex].Value.color != _game.colorToMove) {
-                    moves.Add(toIndex);
+                int to = index + offset;
+                if (_game.board[to] == null || _game.board[to].Value.color != _game.colorToMove || getProtects) {
+                    moves.AddMoveIfLegal(index, to);
                 }
             }
 
             return moves;
         }
 
-        private static List<int> GetSlidingMoves(Piece piece) {
-            List<int> moves = new();
-            var directions = piece.type switch {
-                PieceType.Bishop => Array.AsReadOnly(new[] { -9, -7, 7, 9 }),
-                PieceType.Rook => Array.AsReadOnly(new[] { -8, -1, 1, 8 }),
-                PieceType.Queen => Array.AsReadOnly(new[] { -9, -8, -7, -1, 1, 7, 8, 9 }),
-                _ => throw new ArgumentOutOfRangeException(nameof(piece.type), "Not a sliding piece")
-            };
+        private static HashSet<int> GetSlidingMoves(Piece piece, bool getProtects = false) {
+            if (checkedBy.Count == 2) {
+                return new HashSet<int>();
+            }
+
+            if (!_slidingPieceDirections.ContainsKey(piece.type)) {
+                throw new ArgumentOutOfRangeException(nameof(piece.type), "Not a sliding piece");
+            }
+
+            HashSet<int> moves = new();
+            int[] directions = _slidingPieceDirections[piece.type];
 
             foreach (int dir in directions) {
-                int toIndex = piece.index;
+                int to = piece.index;
                 for (var _ = 0; _ < _distanceToEdge[piece.index][dir]; _++) {
-                    toIndex += dir;
-                    if (_game.board[toIndex] != null) {
+                    to += dir;
+                    if (_game.board[to] != null) {
                         // blocked by a piece
-                        if (_game.board[toIndex].Value.color != _game.colorToMove) {
+                        if (_game.board[to].Value.color != _game.colorToMove || getProtects) {
                             // can capture
-                            moves.Add(toIndex);
+                            moves.AddMoveIfLegal(piece.index, to);
                         }
 
                         break;
                     }
 
-                    moves.Add(toIndex);
+                    moves.AddMoveIfLegal(piece.index, to);
                 }
             }
 
             return moves;
         }
 
-        private static List<int> GetKingMoves(int index) {
-            List<int> moves = new();
+        private static HashSet<int> GetKingMoves(int index, bool getProtects = false) {
+            HashSet<int> moves = new();
             var offsets = Array.AsReadOnly(new[] { -9, -8, -7, -1, 1, 7, 8, 9 });
 
             foreach (int offset in offsets) {
@@ -167,40 +332,49 @@ namespace Chess {
                     continue;
                 }
 
-                int toIndex = index + offset;
-                if (_game.board[toIndex] == null || _game.board[toIndex].Value.color != _game.colorToMove) {
-                    moves.Add(toIndex);
+                int to = index + offset;
+                if (getProtects) {
+                    moves.Add(to);
+                }
+                else if ((_game.board[to] == null || _game.board[to].Value.color != _game.colorToMove) &&
+                         !_attackedSquares.Contains(to)) {
+                    moves.Add(to);
                 }
             }
 
-            if (_game.colorToMove == PieceColor.White) {
-                if (_game.castlingRights.HasFlag(CastlingRights.WhiteKingSide) && CanCastleKingSide()) {
-                    moves.Add(index + 2);
-                }
+            // castling
+            if (!getProtects) {
+                if (_game.colorToMove == PieceColor.White) {
+                    if (_game.castlingRights.HasFlag(CastlingRights.WhiteKingSide) && CanCastleKingSide()) {
+                        moves.Add(index + 2);
+                    }
 
-                if (_game.castlingRights.HasFlag(CastlingRights.WhiteQueenSide) && CanCastleQueenSide()) {
-                    moves.Add(index - 2);
+                    if (_game.castlingRights.HasFlag(CastlingRights.WhiteQueenSide) && CanCastleQueenSide()) {
+                        moves.Add(index - 2);
+                    }
                 }
-            }
-            else {
-                if (_game.castlingRights.HasFlag(CastlingRights.BlackKingSide) && CanCastleKingSide()) {
-                    moves.Add(index + 2);
-                }
+                else {
+                    if (_game.castlingRights.HasFlag(CastlingRights.BlackKingSide) && CanCastleKingSide()) {
+                        moves.Add(index + 2);
+                    }
 
-                if (_game.castlingRights.HasFlag(CastlingRights.BlackQueenSide) && CanCastleQueenSide()) {
-                    moves.Add(index - 2);
+                    if (_game.castlingRights.HasFlag(CastlingRights.BlackQueenSide) && CanCastleQueenSide()) {
+                        moves.Add(index - 2);
+                    }
                 }
             }
 
             return moves;
 
             bool CanCastleKingSide() {
-                return _game.board[index + 1] == null && _game.board[index + 2] == null;
+                return _game.board[index + 1] == null && _game.board[index + 2] == null && checkedBy.Count == 0 &&
+                       !_attackedSquares.Overlaps(new[] { index + 1, index + 2 });
             }
 
             bool CanCastleQueenSide() {
-                return _game.board[index - 1] == null && _game.board[index - 2] == null &&
-                       _game.board[index - 3] == null;
+                return _game.board[index - 1] == null && _game.board[index - 2] == null && checkedBy.Count == 0 &&
+                       _game.board[index - 3] == null &&
+                       !_attackedSquares.Overlaps(new[] { index - 1, index - 2, index - 3 });
             }
         }
 
@@ -231,7 +405,6 @@ namespace Chess {
                 return; // PromotePawn() will conclude the move
             }
 
-            _game.IncrementTurn();
             OnMoveEnd();
             return;
 
@@ -259,7 +432,7 @@ namespace Chess {
                 Destroy(Board.GetPieceGUI(captureIndex).gameObject);
             }
         }
-        
+
         public static void PromotePawn(Piece pawn, PieceType type) {
             Assert.AreNotEqual(_game.board, _game.history.Last().board,
                 "Move is already finished; PromotePawn() should be called to conclude the move.");
@@ -275,26 +448,25 @@ namespace Chess {
             _game.board[pawn.index] = promoted;
             _game.pieces.Remove(pawn);
             _game.pieces.Add(promoted);
-            
-            _game.IncrementTurn();
+
             OnMoveEnd();
         }
-        
+
         public static void UndoMove(bool fullmove = false) {
             if (_game.history.Count == 0) {
                 throw new InvalidOperationException("UndoMove() called before any moves were made");
             }
-            
+
             if (fullmove && _game.colorToMove == _game.playerColor) {
                 _game.historyIndex -= 2;
             }
             else {
                 _game.historyIndex -= 1;
             }
-            
+
             _game.ApplyState(_game.history[_game.historyIndex]);
         }
-        
+
         public static void RedoMove() {
             if (_game.historyIndex == _game.history.Count - 1) {
                 throw new InvalidOperationException("There are no more moves to redo");
@@ -304,15 +476,15 @@ namespace Chess {
             _game.ApplyState(_game.history[_game.historyIndex]);
         }
 
-        private static int CastleTargetRookPos(int kingIndex, int toIndex) {
-            return toIndex > kingIndex ? kingIndex + 3 : kingIndex - 4;
+        private static int CastleTargetRookPos(int kingIndex, int to) {
+            return to > kingIndex ? kingIndex + 3 : kingIndex - 4;
         }
 
         public static bool MoveWasCapture() {
             if (_game.prevMove == null) {
                 throw new InvalidOperationException("MoveWasCapture() called before any moves were made");
             }
-            
+
             Move move = _game.prevMove.Value;
             return _game.history[_game.historyIndex - 1].board[move.to] != null;
         }
@@ -321,7 +493,7 @@ namespace Chess {
             if (_game.prevMove == null) {
                 throw new InvalidOperationException("MoveWasCastle() called before any moves were made");
             }
-            
+
             Move move = _game.prevMove.Value;
             return move.piece.type == PieceType.King && Math.Abs(move.piece.index - move.to) == 2;
         }
@@ -330,7 +502,7 @@ namespace Chess {
             if (_game.prevMove == null) {
                 throw new InvalidOperationException("MoveWasEnPassant() called before any moves were made");
             }
-            
+
             Move move = _game.prevMove.Value;
             return move.piece.type == PieceType.Pawn && move.to == _game.enPassantIndex;
         }
@@ -339,13 +511,9 @@ namespace Chess {
             if (_game.prevMove == null) {
                 throw new InvalidOperationException("MoveWasPromotion() called before any moves were made");
             }
-            
+
             Move move = _game.prevMove.Value;
             return move.piece.type == PieceType.Pawn && (move.to is < 8 or > 55);
-        }
-
-        private static void OnMoveEnd() {
-            MoveEnd?.Invoke(typeof(Moves), EventArgs.Empty);
         }
     }
 }
