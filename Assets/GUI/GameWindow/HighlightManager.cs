@@ -10,7 +10,7 @@ namespace GUI.GameWindow {
         public static Piece? selectedPiece { get; set; }
         public static Square[] highlights { get; } = new Square[64];
         
-        private static Move? prevMove => Game.GetInstance().prevMove;
+        private static Move? prevMove => Game.instance.prevMove;
         
         public static void InitHighlights(Square highlight) {
             Transform parent = GameObject.FindWithTag("Highlights").transform;

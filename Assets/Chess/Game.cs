@@ -8,9 +8,11 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
+using GUI.GameWindow;
+using UnityEngine.Assertions;
 using static Utility.Notation;
+using static UnityEngine.Object;
 
 namespace Chess {
     [Flags]
@@ -23,74 +25,50 @@ namespace Chess {
         All = WhiteKingSide | WhiteQueenSide | BlackKingSide | BlackQueenSide
     }
 
-    public class Game {
-        public record GameState {
-            public Piece?[] board { get; } = new Piece?[64];
-            public List<Piece> pieces { get; }
-            public PieceColor playerColor { get; }
-            public PieceColor colorToMove { get; }
-            public CastlingRights castlingRights { get; }
-            public int? enPassantIndex { get; }
-            public int halfmoveClock { get; }
-            public int fullmoveNumber { get; }
-            public Move? prevMove { get; }
-
-            public GameState(Game game) {
-                Array.Copy(game.board, board, 64);
-                pieces = new List<Piece>(game.pieces);
-                playerColor = game.playerColor;
-                colorToMove = game.colorToMove;
-                castlingRights = game.castlingRights;
-                enPassantIndex = game.enPassantIndex;
-                halfmoveClock = game._halfmoveClock;
-                fullmoveNumber = game._fullmoveNumber;
-                prevMove = game.prevMove;
-            }
-        }
-        
+    public partial class Game {
         private static Game _instance;
-        private int _halfmoveClock;
-        private int _fullmoveNumber;
-        private readonly List<GameState> _history = new();
-        public Piece?[] board { get; } = new Piece?[64];
-        public List<Piece> pieces { get; private set; } = new(32);
-        public PieceColor playerColor { get; private set; }
-        public PieceColor colorToMove { get; private set; }
-        public CastlingRights castlingRights { get; private set; }
-        public int? enPassantIndex { get; private set; }
+        public Piece?[] board { get; internal set; } = new Piece?[64];
+        public List<Piece> pieces { get; internal set; } = new(32);
+        public PieceColor playerColor { get; internal set; }
+        public PieceColor colorToMove { get; internal set; }
+        public CastlingRights castlingRights { get; internal set; }
+        public int? enPassantIndex { get; internal set; }
+        public int halfmoveClock { get; internal set; }
+        public int fullmoveNumber { get; internal set; }
         public Move? prevMove { get; set; }
         public bool analysisMode { get; set; }
-        public int historyIndex { get; set; } = -1;
-        public ReadOnlyCollection<GameState> history => _history.AsReadOnly();
+        public StateManager stateManager => StateManager.instance;
+        public static Game instance => _instance ??= new Game();
 
+        public static event EventHandler MoveEnd;
 
         private Game() {
             StartNewGame();
         }
-
-        public static Game GetInstance() {
-            return _instance ??= new Game();
+        
+        internal void OnMoveEnd() {
+            IncrementTurn();
+            MoveGenerator.UpdateData();
+            MoveEnd?.Invoke(typeof(Game), EventArgs.Empty);
         }
         
         public void StartNewGame(string fen = StartingFEN) {
             LoadFromFEN(fen);
-            _history.Clear();
             prevMove = null;
             analysisMode = true; // TODO: temporarily turned on for development, change this later
-            historyIndex = -1;
-            RecordState();
+            stateManager.Reset();
         }
 
-        public void IncrementTurn() {
+        private void IncrementTurn() {
             if (prevMove == null) {
-                throw new InvalidOperationException("IncrementTurn() called before first move was made");
+                throw new InvalidOperationException("A move must be made before a turn is incremented");
             }
 
             if (prevMove.Value.piece.type == PieceType.Pawn) {
-                _halfmoveClock = 0;
+                halfmoveClock = 0;
             }
             else {
-                _halfmoveClock++;
+                halfmoveClock++;
             }
 
             if (colorToMove == PieceColor.White) {
@@ -98,55 +76,37 @@ namespace Chess {
             }
             else {
                 colorToMove = PieceColor.White;
-                _fullmoveNumber++;
+                fullmoveNumber++;
             }
             
             UpdateCastlingRights();
             UpdateEnPassantIndex();
-            RecordState();
         }
 
         public void CheckState() {
             // TODO: Implement win/lose/draw logic
         }
         
-        private void RecordState() {
-            if (historyIndex < _history.Count - 1) {
-                _history.RemoveRange(historyIndex + 1, _history.Count - (historyIndex + 1));
-            }
-            
-            _history.Add(new GameState(this));
-            historyIndex++;
-        }
-
-        public void ApplyState(GameState state) {
-            Array.Copy(state.board, board, 64);
-            pieces = new List<Piece>(state.pieces);
-            playerColor = state.playerColor;
-            colorToMove = state.colorToMove;
-            castlingRights = state.castlingRights;
-            enPassantIndex = state.enPassantIndex;
-            _halfmoveClock = state.halfmoveClock;
-            _fullmoveNumber = state.fullmoveNumber;
-            prevMove = state.prevMove;
-        }
-
         private void UpdateCastlingRights() {
             if (prevMove!.Value.piece.type == PieceType.King) {
                 castlingRights &= prevMove!.Value.piece.color == PieceColor.White
                     ? ~CastlingRights.WhiteKingSide & ~CastlingRights.WhiteQueenSide
                     : ~CastlingRights.BlackKingSide & ~CastlingRights.BlackQueenSide;
             }
-            else if (board[0] == null || board[0].Value.color != PieceColor.White) {
+            
+            if (board[0] == null || board[0].Value.color != PieceColor.White) {
                 castlingRights &= ~CastlingRights.WhiteQueenSide;
             }
-            else if (board[7] == null || board[7].Value.color != PieceColor.White) {
+            
+            if (board[7] == null || board[7].Value.color != PieceColor.White) {
                 castlingRights &= ~CastlingRights.WhiteKingSide;
             }
-            else if (board[56] == null || board[56].Value.color != PieceColor.Black) {
+            
+            if (board[56] == null || board[56].Value.color != PieceColor.Black) {
                 castlingRights &= ~CastlingRights.BlackQueenSide;
             }
-            else if (board[63] == null || board[63].Value.color != PieceColor.Black) {
+            
+            if (board[63] == null || board[63].Value.color != PieceColor.Black) {
                 castlingRights &= ~CastlingRights.BlackKingSide;
             }
         }
@@ -161,14 +121,136 @@ namespace Chess {
                 enPassantIndex = null;
             }
         }
+        
+        public void MovePiece(Piece piece, int to) {
+            stateManager.RecordState();
+            var move = new Move(piece, to);
+
+            prevMove = move;
+            board[piece.index] = null;
+            if (board[to] != null) {
+                pieces.Remove(board[to].Value);
+            }
+
+            pieces.Remove(piece);
+            piece.index = to;
+            board[to] = piece;
+            pieces.Add(piece);
+
+            if (MoveWasCastle()) {
+                CastleRookMove(move.from);
+            }
+            else if (MoveWasEnPassant()) {
+                EnPassant(move.from);
+            }
+            else if (MoveWasPromotion()) {
+                // because PromotePawn() does not modify the argument pawn, but instead directly changes the type
+                // of the pawn on the board, we need to call it after the move is made.
+                PopupManager.ShowPawnPromotionPopup(piece);
+                return; // PromotePawn() will conclude the move
+            }
+
+            OnMoveEnd();
+            return;
+
+            void CastleRookMove(int kingIndex) {
+                int rookTo = kingIndex + (to - kingIndex) / 2;
+                int rookPos = MoveGenerator.CastleTargetRookPos(kingIndex, to);
+                Piece rook = board[rookPos]!.Value;
+                PieceGUI rookGUI = Board.GetPieceGUI(rookPos)!;
+
+                pieces.Remove(rook);
+                rook.index = rookTo;
+                board[rookTo] = rook;
+                pieces.Add(rook);
+
+                rookGUI.piece = rook;
+                rookGUI.transform.parent = Board.GetSquare(rookTo).transform;
+                rookGUI.transform.position = rookGUI.transform.parent.position;
+            }
+
+            void EnPassant(int pawnIndex) {
+                int captureIndex = to - pawnIndex > 0 ? to - 8 : to + 8;
+
+                pieces.Remove(board[captureIndex]!.Value);
+                board[captureIndex] = null;
+                Destroy(Board.GetPieceGUI(captureIndex).gameObject);
+            }
+        }
+
+        public void MovePiece(int from, int to) {
+            if (board[from] == null) {
+                throw new ArgumentException("No piece at index " + from);
+            }
+
+            MovePiece(board[from].Value, to);
+        }
+
+        public void PromotePawn(Piece pawn, PieceType type) {
+            if (stateManager.last is not null) {
+                Assert.AreNotEqual(board, stateManager.last.board,
+                    "Move is already finished; PromotePawn() should be called to conclude the move.");
+            }
+            
+            if (pawn.type != PieceType.Pawn) {
+                throw new ArgumentException("Piece must be a pawn");
+            }
+
+            if (pawn.index is > 7 and < 56) {
+                throw new ArgumentException("Pawn must be on the last rank");
+            }
+
+            Piece promoted = new(type, pawn.color, pawn.index);
+            board[pawn.index] = promoted;
+            pieces.Remove(pawn);
+            pieces.Add(promoted);
+
+            OnMoveEnd();
+        }
+
+        public bool MoveWasCapture() {
+            if (prevMove == null) {
+                throw new InvalidOperationException("MoveWasCapture() called before any moves were made");
+            }
+
+            Move move = prevMove.Value;
+            return stateManager.last.board[move.to] != null;
+        }
+
+        public bool MoveWasCastle() {
+            if (prevMove == null) {
+                throw new InvalidOperationException("MoveWasCastle() called before any moves were made");
+            }
+
+            Move move = prevMove.Value;
+            return move.piece.type == PieceType.King && Math.Abs(move.from - move.to) == 2;
+        }
+
+        public bool MoveWasEnPassant() {
+            if (prevMove == null) {
+                throw new InvalidOperationException("MoveWasEnPassant() called before any moves were made");
+            }
+
+            Move move = prevMove.Value;
+            return move.piece.type == PieceType.Pawn && move.to == enPassantIndex;
+        }
+
+        public bool MoveWasPromotion() {
+            if (prevMove == null) {
+                throw new InvalidOperationException("MoveWasPromotion() called before any moves were made");
+            }
+
+            Move move = prevMove.Value;
+            return move.piece.type == PieceType.Pawn && (move.to is < 8 or > 55);
+        }
 
         private void LoadFromFEN(in string fen) {
             // game state defaults:
             colorToMove = PieceColor.White;
             castlingRights = CastlingRights.All;
             enPassantIndex = null;
-            _halfmoveClock = 0;
-            _fullmoveNumber = 1;
+            halfmoveClock = 0;
+            fullmoveNumber = 1;
 
             string[] fields = fen.Split(' ');
 
@@ -205,9 +287,9 @@ namespace Chess {
             enPassantIndex = fields[3] == "-" ? null : (int)Enum.Parse<SquarePos>(fields[3]);
 
             if (fields.Length < 5) return;
-            _halfmoveClock = Int32.Parse(fields[4]);
+            halfmoveClock = Int32.Parse(fields[4]);
 
-            _fullmoveNumber = fields.Length < 6 ? (_halfmoveClock / 2) + 1 : Int32.Parse(fields[5]);
+            fullmoveNumber = fields.Length < 6 ? (halfmoveClock / 2) + 1 : Int32.Parse(fields[5]);
         }
     }
 }

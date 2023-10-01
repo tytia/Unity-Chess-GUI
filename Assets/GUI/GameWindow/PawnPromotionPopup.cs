@@ -15,6 +15,7 @@ namespace GUI.GameWindow {
         private readonly Button[] _squareButtons = new Button[4];
         private readonly Image[] _pieceImages = new Image[4];
         private Piece _pawn;
+        private static Game _game;
         
         public Button boardDim => _boardDim;
 
@@ -29,6 +30,7 @@ namespace GUI.GameWindow {
          */
 
         private void Awake() {
+            _game = Game.instance;
             _boardDim.onClick.AddListener(CancelPromotion);
             for (var i = 0; i < _promotionOptions.Length; i++) {
                 Vector3 spawnPos = transform.position + (i * Vector3.down);
@@ -81,7 +83,7 @@ namespace GUI.GameWindow {
         }
 
         private void Promote(PieceType promotionTarget) {
-            Moves.PromotePawn(_pawn, promotionTarget);
+            _game.PromotePawn(_pawn, promotionTarget);
             
             var pieceGUI = Board.GetPieceGUI(_pawn.index);
             var promoted = new Piece(promotionTarget, _pawn.color);

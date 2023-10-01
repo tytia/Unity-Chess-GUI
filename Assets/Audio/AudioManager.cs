@@ -11,20 +11,22 @@ namespace Audio {
         [SerializeField] private AudioClip _promote;
         [SerializeField] private AudioClip _premove;
         private static AudioSource _audioSource;
+        private static Game _game;
 
         private void Awake() {
             _audioSource = GetComponent<AudioSource>();
-            Moves.MoveEnd += PlayMoveSfx;
+            _game = Game.instance;
+            Game.MoveEnd += PlayMoveSfx;
         }
 
         private void PlayMoveSfx(object sender, EventArgs e) {
-            if (Moves.checkedBy.Count != 0) {
+            if (MoveGenerator.checkedBy.Count != 0) {
                 _audioSource.PlayOneShot(_check);
             }
-            else if (Moves.MoveWasPromotion()) {
+            else if (_game.MoveWasPromotion()) {
                 _audioSource.PlayOneShot(_promote);
             }
-            else if (Moves.MoveWasCapture()) {
+            else if (_game.MoveWasCapture()) {
                 _audioSource.PlayOneShot(_capture);
             }
             else {

@@ -12,7 +12,7 @@ namespace GUI.GameWindow {
         private static Game _game;
 
         private void Awake() {
-            _game = Game.GetInstance();
+            _game = Game.instance;
             _spritesStatic = _sprites;
         }
 

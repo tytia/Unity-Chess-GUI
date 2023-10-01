@@ -1,4 +1,3 @@
-using System.Linq;
 using Chess;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -20,7 +19,7 @@ namespace GUI.GameWindow {
         private void Awake() {
             _sr = GetComponent<SpriteRenderer>();
             _cam = Camera.main;
-            _game = Game.GetInstance();
+            _game = Game.instance;
         }
 
         private void Start() {
@@ -52,12 +51,12 @@ namespace GUI.GameWindow {
         }
 
         private void MovePiece(int to) {
-            Moves.MovePiece(piece, to);
+            _game.MovePiece(piece, to);
             HighlightPrevMove(); // needs to be after MovePiece() because MovePiece() changes prevMove
             _pieceIndex = to;
         }
 
-        private static void MovePieceGUI(PieceGUI pieceGUI, int to) {
+        public static void MovePieceGUI(PieceGUI pieceGUI, int to) {
             // it is important to note that this method only affects the GUI and updates
             // which piece the specified PieceGUI is referring to
             var moveHandler = pieceGUI.GetComponent<MoveHandler>();
@@ -70,6 +69,15 @@ namespace GUI.GameWindow {
             pieceGUI.transform.parent = Board.GetSquare(to).transform;
             pieceGUI.transform.position = pieceGUI.transform.parent.position;
             moveHandler._pieceIndex = to;
+        }
+
+        public static void MovePieceGUI(int from, int to) {
+            PieceGUI pieceGUI = Board.GetPieceGUI(from);
+            if (pieceGUI is null) {
+                throw new System.ArgumentException("No piece at index " + from);
+            }
+            
+            MovePieceGUI(pieceGUI, to);
         }
 
         private void FollowMouse() {
@@ -106,15 +114,15 @@ namespace GUI.GameWindow {
 
             if (PopupManager.pawnPromotion.boardDim.IsActive()) {
                 // cancel promotion
-                _game.ApplyState(_game.history.Last());
+                _game.stateManager.ApplyState(_game.stateManager.last);
             }
             else {
-                if (Moves.MoveWasPromotion()) {
+                if (_game.MoveWasPromotion()) {
                     pieceGUI.SetSprite(PieceManager.PieceToSprite(move.piece));
                     pieceGUI.name = move.piece.ToString();
                 }
                 
-                Moves.UndoMove();
+                _game.stateManager.Undo();
             }
             
             HighlightPrevMove();

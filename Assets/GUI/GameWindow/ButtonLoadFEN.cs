@@ -9,10 +9,10 @@ namespace GUI.GameWindow {
         [SerializeField] private TMP_InputField _fenInput;
         [SerializeField] private GameObject _errorText;
         [SerializeField] private PieceManager _pieceManager;
-        private Game _game;
+        private static Game _game;
 
         private void Awake() {
-            _game = Game.GetInstance();
+            _game = Game.instance;
         }
 
         public void LoadFEN() {
@@ -30,7 +30,7 @@ namespace GUI.GameWindow {
         
         private void StartNewGame(string fen) {
             _game.StartNewGame(fen);
-            Moves.RefreshData();
+            MoveGenerator.RefreshData();
             _pieceManager.RemovePieces();
             _pieceManager.InitPieces();
             HighlightManager.ClearHighlights();
