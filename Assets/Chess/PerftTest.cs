@@ -9,22 +9,21 @@ namespace Chess {
     public class PerftTest : MonoBehaviour {
         private static readonly Game _game = Game.instance;
         [SerializeField] private int _depth = 1;
-        [SerializeField] private string _fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
+        [SerializeField] private string _fen = Notation.StartingFEN;
 
         private void Update() {
             if (Input.GetKey(KeyCode.LeftAlt) && Input.GetKey(KeyCode.LeftShift) && Input.GetKeyDown(KeyCode.P)) {
                 Debug.Log("perft started");
+
+                if (_fen == "") {
+                    _game.StartNewGame();
+                }
+                else {
+                    _game.StartNewGame(_fen);
+                }
                 
-                _game.StartNewGame(_fen);
                 Stopwatch stopwatch = new();
-                // for (var i = 1; i <= depth; i++) {
-                //
-                //     stopwatch.Start();
-                //     ulong result = Perft(i);
-                //     stopwatch.Stop();
-                //
-                //     Debug.Log($"perft({i}) = {result}, took {stopwatch.ElapsedMilliseconds} milliseconds");
-                // }
+                
                 stopwatch.Start();
                 ulong result = Perft(_depth);
                 stopwatch.Stop();
@@ -44,7 +43,7 @@ namespace Chess {
             foreach (int from in MoveGenerator.legalMoves.Keys!.ToArray()) {
                 foreach (int to in MoveGenerator.legalMoves[from]) {
                     if (depth == _depth) nodes = 0;
-                    var piece = MovePieceNoGUI(from, to); // actual move
+                    var piece = MovePieceNoGUI(from, to);
 
                     if (_game.MoveWasPromotion()) {
                         var promotionTargets = new [] {PieceType.Queen, PieceType.Knight, PieceType.Bishop, PieceType.Rook};
@@ -53,7 +52,7 @@ namespace Chess {
                             var res = Perft(depth - 1);
                             nodes += res;
                             totalNodes += res;
-                            _game.stateManager.Undo();
+                            _game.stateManager.Undo(discardRedo: true);
                             MovePieceNoGUI(from, to);
                         }
                     }
@@ -62,7 +61,7 @@ namespace Chess {
                         nodes += res;
                         totalNodes += res;
                     }
-                    _game.stateManager.Undo();
+                    _game.stateManager.Undo(discardRedo: true);
                     
                     if (depth == _depth) Debug.Log($"{(Notation.SquarePos)from}{(Notation.SquarePos)to}: {nodes}");
                 }
@@ -82,15 +81,12 @@ namespace Chess {
             var move = new Move(piece, to);
 
             _game.prevMove = move;
+            
+            _game.pieceIndexes.Remove(piece.index);
             _game.board[piece.index] = null;
-            if (_game.board[to] != null) {
-                _game.pieces.Remove(_game.board[to].Value);
-            }
-
-            _game.pieces.Remove(piece);
             piece.index = to;
             _game.board[to] = piece;
-            _game.pieces.Add(piece);
+            _game.pieceIndexes.Add(to);
 
             if (_game.MoveWasCastle()) {
                 CastleRookMove(move.from);
@@ -110,16 +106,17 @@ namespace Chess {
                 int rookPos = MoveGenerator.CastleTargetRookPos(kingIndex, to);
                 Piece rook = _game.board[rookPos]!.Value;
 
-                _game.pieces.Remove(rook);
+                _game.pieceIndexes.Remove(rookPos);
                 rook.index = rookTo;
+                _game.board[rookPos] = null;
                 _game.board[rookTo] = rook;
-                _game.pieces.Add(rook);
+                _game.pieceIndexes.Add(rookTo);
             }
 
             void EnPassant(int captorIndex) {
                 int captureIndex = to - captorIndex > 0 ? to - 8 : to + 8;
 
-                _game.pieces.Remove(_game.board[captureIndex]!.Value);
+                _game.pieceIndexes.Remove(captureIndex);
                 _game.board[captureIndex] = null;
             }
         }

@@ -28,14 +28,15 @@ namespace Chess {
     public partial class Game {
         private static Game _instance;
         public Piece?[] board { get; internal set; } = new Piece?[64];
-        public List<Piece> pieces { get; internal set; } = new(32);
+        public HashSet<int> pieceIndexes { get; internal set; } = new(32);
         public PieceColor playerColor { get; internal set; }
         public PieceColor colorToMove { get; internal set; }
         public CastlingRights castlingRights { get; internal set; }
         public int? enPassantIndex { get; internal set; }
         public int halfmoveClock { get; internal set; }
         public int fullmoveNumber { get; internal set; }
-        public Move? prevMove { get; set; }
+        public Move? prevMove { get; internal set; }
+        public bool inCheck { get; internal set; }
         public bool analysisMode { get; set; }
         public StateManager stateManager => StateManager.instance;
         public static Game instance => _instance ??= new Game();
@@ -127,15 +128,12 @@ namespace Chess {
             var move = new Move(piece, to);
 
             prevMove = move;
-            board[piece.index] = null;
-            if (board[to] != null) {
-                pieces.Remove(board[to].Value);
-            }
 
-            pieces.Remove(piece);
+            pieceIndexes.Remove(piece.index);
+            board[piece.index] = null;
             piece.index = to;
             board[to] = piece;
-            pieces.Add(piece);
+            pieceIndexes.Add(to);
 
             if (MoveWasCastle()) {
                 CastleRookMove(move.from);
@@ -159,10 +157,11 @@ namespace Chess {
                 Piece rook = board[rookPos]!.Value;
                 PieceGUI rookGUI = Board.GetPieceGUI(rookPos)!;
 
-                pieces.Remove(rook);
+                pieceIndexes.Remove(rookPos);
                 rook.index = rookTo;
+                board[rookPos] = null;
                 board[rookTo] = rook;
-                pieces.Add(rook);
+                pieceIndexes.Add(rookTo);
 
                 rookGUI.piece = rook;
                 rookGUI.transform.parent = Board.GetSquare(rookTo).transform;
@@ -170,9 +169,9 @@ namespace Chess {
             }
 
             void EnPassant(int pawnIndex) {
-                int captureIndex = to - pawnIndex > 0 ? to - 8 : to + 8;
+                int captureIndex = colorToMove == PieceColor.White ? to - 8 : to + 8;
 
-                pieces.Remove(board[captureIndex]!.Value);
+                pieceIndexes.Remove(captureIndex);
                 board[captureIndex] = null;
                 Destroy(Board.GetPieceGUI(captureIndex).gameObject);
             }
@@ -202,8 +201,6 @@ namespace Chess {
 
             Piece promoted = new(type, pawn.color, pawn.index);
             board[pawn.index] = promoted;
-            pieces.Remove(pawn);
-            pieces.Add(promoted);
 
             OnMoveEnd();
         }
@@ -255,7 +252,7 @@ namespace Chess {
             string[] fields = fen.Split(' ');
 
             Array.Clear(board, 0, board.Length);
-            pieces.Clear();
+            pieceIndexes.Clear();
             string[] ranks = fields[0].Split('/');
             for (int i = (int)SquarePos.a8, j = 0; j < 8; i -= 8, j++) {
                 for (int fileIndex = 0, file = 0; fileIndex < ranks[j].Length && file < 8; fileIndex++) {
@@ -265,8 +262,9 @@ namespace Chess {
                     }
                     else {
                         var (pieceType, pieceColor) = charToPieceInfo[c];
-                        pieces.Add(new Piece(pieceType, pieceColor, i + file));
-                        board[i + file] = pieces.Last();
+                        Piece piece = new Piece(pieceType, pieceColor, i + file);
+                        pieceIndexes.Add(piece.index);
+                        board[i + file] = piece;
                         file++;
                     }
                 }

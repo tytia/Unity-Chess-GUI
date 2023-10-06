@@ -5,8 +5,7 @@ namespace Chess {
     public record State {
         // game data
         public Piece?[] board { get; } = new Piece?[64];
-        public List<Piece> pieces { get; }
-        public PieceColor playerColor { get; }
+        public HashSet<int> pieces { get; }
         public PieceColor colorToMove { get; }
         public CastlingRights castlingRights { get; }
         public int? enPassantIndex { get; }
@@ -16,15 +15,13 @@ namespace Chess {
         
         // move generator data
         public Dictionary<int, HashSet<int>> legalMoves { get; }
-        public HashSet<int> attackedSquares { get; }
+        public Dictionary<int, HashSet<int>> attackedSquaresByPiece { get; }
         public int[] kingIndexes { get; }
-        public Dictionary<int, HashSet<int>>[] kingRays { get; }
-        public List<Piece> checkedBy { get; }
 
         public State(Game game) {
+            // game data
             Array.Copy(game.board, board, 64);
-            pieces = new List<Piece>(game.pieces);
-            playerColor = game.playerColor;
+            pieces = new HashSet<int>(game.pieceIndexes);
             colorToMove = game.colorToMove;
             castlingRights = game.castlingRights;
             enPassantIndex = game.enPassantIndex;
@@ -32,23 +29,18 @@ namespace Chess {
             fullmoveNumber = game.fullmoveNumber;
             prevMove = game.prevMove;
             
+            // move generator data
             legalMoves = new Dictionary<int, HashSet<int>>();
             foreach (KeyValuePair<int, HashSet<int>> kvp in MoveGenerator.legalMoves) {
                 legalMoves[kvp.Key] = new HashSet<int>(kvp.Value);
             }
             
-            attackedSquares = new HashSet<int>(MoveGenerator.attackedSquares);
-            kingIndexes = (int[])MoveGenerator.kingIndexes.Clone();
-            
-            kingRays = new Dictionary<int, HashSet<int>>[2];
-            for (int i = 0; i < 2; i++) {
-                kingRays[i] = new Dictionary<int, HashSet<int>>();
-                foreach (KeyValuePair<int, HashSet<int>> kvp in MoveGenerator.kingRays[i]) {
-                    kingRays[i][kvp.Key] = new HashSet<int>(kvp.Value);
-                }
+            attackedSquaresByPiece = new Dictionary<int, HashSet<int>>();
+            foreach (KeyValuePair<int, HashSet<int>> kvp in MoveGenerator.attackedSquaresByPiece) {
+                attackedSquaresByPiece[kvp.Key] = new HashSet<int>(kvp.Value);
             }
             
-            checkedBy = MoveGenerator.checkedBy;
+            kingIndexes = (int[])MoveGenerator.kingIndexes.Clone();
         }
     }
 
@@ -74,8 +66,7 @@ namespace Chess {
         
         public void ApplyState(State state) {
             game.board = state.board;
-            game.pieces = new List<Piece>(state.pieces);
-            game.playerColor = state.playerColor;
+            game.pieceIndexes = new HashSet<int>(state.pieces);
             game.colorToMove = state.colorToMove;
             game.castlingRights = state.castlingRights;
             game.enPassantIndex = state.enPassantIndex;
@@ -83,26 +74,19 @@ namespace Chess {
             game.fullmoveNumber = state.fullmoveNumber;
             game.prevMove = state.prevMove;
             MoveGenerator.legalMoves = state.legalMoves;
-            MoveGenerator.attackedSquares = state.attackedSquares;
+            MoveGenerator.attackedSquaresByPiece = state.attackedSquaresByPiece;
             MoveGenerator.kingIndexes = state.kingIndexes;
-            MoveGenerator.kingRays = state.kingRays;
-            MoveGenerator.checkedBy = state.checkedBy;
         }
         
-        public void Undo(bool fullmove = false) {
+        public void Undo(bool fullmove = false, bool discardRedo = false) {
             if (_undoStack.Count == 0) {
                 throw new InvalidOperationException("Undo() called before any moves were made");
             }
 
-            if (_redoStack.Count == 0) {
-                // this class records up to the previous state, so if we want to be able to redo up to the present,
-                // we should first record the present state into the redo stack
+            if (!discardRedo) {
                 _redoStack.Push(new State(game));
             }
-            
-            State prevState = _undoStack.Pop();
-            _redoStack.Push(prevState);
-            ApplyState(prevState);
+            ApplyState(_undoStack.Pop());
             
             if (fullmove && game.colorToMove == game.playerColor) {
                 Undo();
@@ -114,9 +98,8 @@ namespace Chess {
                 throw new InvalidOperationException("Redo() called before any moves were undone");
             }
 
-            State nextState = _redoStack.Pop();
-            _undoStack.Push(nextState);
-            ApplyState(nextState);
+            _undoStack.Push(new State(game));
+            ApplyState(_redoStack.Pop());
         }
     }
 }

@@ -20,7 +20,7 @@ namespace Audio {
         }
 
         private void PlayMoveSfx(object sender, EventArgs e) {
-            if (MoveGenerator.checkedBy.Count != 0) {
+            if (_game.inCheck) {
                 _audioSource.PlayOneShot(_check);
             }
             else if (_game.MoveWasPromotion()) {

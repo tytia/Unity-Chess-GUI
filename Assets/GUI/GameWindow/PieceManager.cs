@@ -25,7 +25,8 @@ namespace GUI.GameWindow {
         }
 
         public void InitPieces() {
-            foreach (Piece piece in _game.pieces) {
+            foreach (int pieceIndex in _game.pieceIndexes) {
+                Piece piece = _game.board[pieceIndex]!.Value;
                 var point = piece.index.ToSquarePosVector2();
                 PieceGUI p = Instantiate(_pieceGUI, point, Quaternion.identity, Board.GetSquare(piece.index).transform);
                 p.piece = piece;
