@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using GUI.GameWindow;
+using GUI.GameWindow.Popups;
 using UnityEngine.Assertions;
 using static Utility.Notation;
 using static UnityEngine.Object;
@@ -24,8 +25,15 @@ namespace Chess {
         BlackQueenSide = 8,
         All = WhiteKingSide | WhiteQueenSide | BlackKingSide | BlackQueenSide
     }
+    
+    public enum EndState : byte {
+        Ongoing,
+        Checkmate,
+        Stalemate,
+        Draw
+    }
 
-    public partial class Game {
+    public class Game {
         private static Game _instance;
         public Piece?[] board { get; internal set; } = new Piece?[64];
         public HashSet<int> pieceIndexes { get; internal set; } = new(32);
@@ -37,6 +45,7 @@ namespace Chess {
         public int fullmoveNumber { get; internal set; }
         public Move? prevMove { get; internal set; }
         public bool inCheck { get; internal set; }
+        public EndState endState { get; internal set; }
         public bool analysisMode { get; set; }
         public StateManager stateManager => StateManager.instance;
         public static Game instance => _instance ??= new Game();
@@ -50,6 +59,7 @@ namespace Chess {
         internal void OnMoveEnd() {
             IncrementTurn();
             MoveGenerator.UpdateData();
+            UpdateEndState();
             MoveEnd?.Invoke(typeof(Game), EventArgs.Empty);
         }
         
@@ -58,6 +68,12 @@ namespace Chess {
             prevMove = null;
             analysisMode = true; // TODO: temporarily turned on for development, change this later
             stateManager.Reset();
+            if (_instance != null) MoveGenerator.Reset();
+        }
+        
+        public void StartNewGame(PieceColor plyrColor) {
+            StartNewGame();
+            playerColor = plyrColor;
         }
 
         private void IncrementTurn() {
@@ -84,8 +100,28 @@ namespace Chess {
             UpdateEnPassantIndex();
         }
 
-        public void CheckState() {
-            // TODO: Implement win/lose/draw logic
+        private void UpdateEndState() {
+            endState = EndState.Ongoing;
+            if (inCheck && MoveGenerator.legalMoves.Count == 0) {
+                endState = EndState.Checkmate;
+            }
+            else if (MoveGenerator.legalMoves.Count == 0) {
+                endState = EndState.Stalemate;
+            }
+            else if (fullmoveNumber >= 50) {
+                endState = EndState.Draw;
+            }
+            else if (ThreefoldRepetition()) {
+                endState = EndState.Draw;
+            }
+
+            return;
+            
+            bool ThreefoldRepetition() {
+                var history = stateManager.allStates;
+                return history.Count >= 9 && board.SequenceEqual(history[^5].board) &&
+                       board.SequenceEqual(history[^9].board);
+            }
         }
         
         private void UpdateCastlingRights() {

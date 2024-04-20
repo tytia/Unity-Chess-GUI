@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Chess {
     public readonly struct Move {
@@ -32,18 +31,6 @@ namespace Chess {
 
         private static readonly Game _game = Game.instance;
 
-        public static HashSet<int> GetLegalSquares(this Piece piece) {
-            return piece.color == _game.colorToMove
-                ? new HashSet<int>(legalMoves[piece.index])
-                : new HashSet<int>();
-        }
-
-        private static void AddMoveIfLegal(this HashSet<int> moves, int from, int to, bool kingMove = false) {
-            if (MoveIsCheckLegal(from, to, kingMove)) {
-                moves.Add(to);
-            }
-        }
-
         static MoveGenerator() {
             InitDistanceToEdge();
             InitRayDirections();
@@ -54,6 +41,16 @@ namespace Chess {
         public static void Reset() {
             AssignKingIndexes();
             UpdateData();
+        }
+        
+        public static HashSet<int> GetLegalSquares(this Piece piece) {
+            return legalMoves.TryGetValue(piece.index, out var move) ? move : new HashSet<int>();
+        }
+
+        private static void AddMoveIfLegal(this HashSet<int> moves, int from, int to, bool kingMove = false) {
+            if (IsMoveLegal(from, to, kingMove)) {
+                moves.Add(to);
+            }
         }
 
         private static void InitDistanceToEdge() {
@@ -121,12 +118,13 @@ namespace Chess {
             foreach (int pieceIndex in _game.pieceIndexes) {
                 Piece piece = _game.board[pieceIndex]!.Value;
                 if (piece.color == _game.colorToMove) {
-                    legalMoves[pieceIndex] = GetMoves(pieceIndex);
+                    var moves = GetMoves(pieceIndex);
+                    if (moves.Count != 0) legalMoves[pieceIndex] = moves;
                 }
             }
         }
 
-        private static bool MoveIsCheckLegal(int from, int to, bool kingMove) {
+        private static bool IsMoveLegal(int from, int to, bool kingMove) {
             var result = true;
             int kingIndex = kingMove ? to : kingIndexes[(int)_game.colorToMove];
             List<(int key, HashSet<int> value)> modifiedEntries = new();
@@ -151,13 +149,13 @@ namespace Chess {
             }
 
             // update sliding piece attacked squares if move reveals or blocks a check
-            foreach ((int pieceIndex, HashSet<int> lAttackedSquares) in attackedSquaresByPiece) {
+            foreach ((int pieceIndex, HashSet<int> attackedSquares) in attackedSquaresByPiece) {
                 if (_game.board[pieceIndex] is not null &&
                     _slidingPieceDirections.ContainsKey(_game.board[pieceIndex].Value.type)) {
                     // does it reveal a check?
-                    if (lAttackedSquares.Contains(from) || lAttackedSquares.Contains(capturedPawnIndex)) {
+                    if (attackedSquares.Contains(from) || attackedSquares.Contains(capturedPawnIndex)) {
                         int attack = pieceIndex;
-                        int direction = lAttackedSquares.Contains(from)
+                        int direction = attackedSquares.Contains(from)
                             ? _rayDirection[pieceIndex | (from << 6)]
                             : _rayDirection[pieceIndex | (capturedPawnIndex << 6)];
                         for (var _ = 0; _ < _distanceToEdge[pieceIndex][direction]; _++) {
@@ -172,7 +170,7 @@ namespace Chess {
                         }
                     }
                     // does it block a check?
-                    if (lAttackedSquares.Contains(to)) {
+                    if (attackedSquares.Contains(to)) {
                         int attack = to;
                         int direction = _rayDirection[pieceIndex | (to << 6)];
                         modifiedEntries.Add((pieceIndex, new HashSet<int>(attackedSquaresByPiece[pieceIndex])));

@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using Utility;
 
-namespace GUI.GameWindow {
+namespace GUI.GameWindow.Popups {
     public class PawnPromotionPopup : MonoBehaviour, IPopup {
         [SerializeField] private Button _boardDim;
         [SerializeField] private Button _squareButtonPrefab;
@@ -15,11 +15,10 @@ namespace GUI.GameWindow {
         private readonly Button[] _squareButtons = new Button[4];
         private readonly Image[] _pieceImages = new Image[4];
         private Piece _pawn;
-        private static Game _game;
+        private static Game game => Game.instance;
         
         public Button boardDim => _boardDim;
 
-        // TODO: when board dim is clicked, cancel promotion and revert move
         /*
          * Unity UI elements are drawn based on hierarchy order.
          *
@@ -30,7 +29,6 @@ namespace GUI.GameWindow {
          */
 
         private void Awake() {
-            _game = Game.instance;
             _boardDim.onClick.AddListener(CancelPromotion);
             for (var i = 0; i < _promotionOptions.Length; i++) {
                 Vector3 spawnPos = transform.position + (i * Vector3.down);
@@ -52,19 +50,16 @@ namespace GUI.GameWindow {
         }
 
         private void Start() {
-            PopupManager.pawnPromotion = this;
+            PopupManager.pawnPromotionPopup = this;
         }
 
         public void Assign(Piece pawn) {
-            if (_pawn.color != pawn.color) {
-                Vector3 direction = pawn.color == PieceColor.White ? Vector3.down : Vector3.up;
-                for (var i = 0; i < _promotionOptions.Length; i++) {
-                    Vector3 spawnPos = transform.position + (i * direction);
-                    _squareButtons[i].transform.position = spawnPos;
-                    _pieceImages[i].transform.position = spawnPos;
-                    
-                    _pieceImages[i].sprite = PieceManager.PieceToSprite(new Piece(_promotionOptions[i], pawn.color));
-                }
+            for (var i = 0; i < _promotionOptions.Length; i++) {
+                Vector3 spawnPos = transform.position + (i * Vector3.down);
+                _squareButtons[i].transform.position = spawnPos;
+                _pieceImages[i].transform.position = spawnPos;
+                
+                _pieceImages[i].sprite = PieceManager.PieceToSprite(new Piece(_promotionOptions[i], pawn.color));
             }
 
             _pawn = pawn;
@@ -72,7 +67,7 @@ namespace GUI.GameWindow {
 
         public void Show(bool value) {
             if (value) {
-                transform.position = _pawn.index.ToSquarePosVector2();
+                transform.position = _pawn.index.ToSquarePosVector2(game.playerColor);
             }
 
             foreach (Transform child in transform) {
@@ -83,7 +78,7 @@ namespace GUI.GameWindow {
         }
 
         private void Promote(PieceType promotionTarget) {
-            _game.PromotePawn(_pawn, promotionTarget);
+            game.PromotePawn(_pawn, promotionTarget);
             
             var pieceGUI = Board.GetPieceGUI(_pawn.index);
             var promoted = new Piece(promotionTarget, _pawn.color);

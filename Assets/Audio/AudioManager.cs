@@ -32,6 +32,10 @@ namespace Audio {
             else {
                 _audioSource.PlayOneShot(_move);
             }
+            
+            if (_game.endState != EndState.Ongoing) {
+                _audioSource.PlayOneShot(_gameEnd);
+            }
         }
     }
 }

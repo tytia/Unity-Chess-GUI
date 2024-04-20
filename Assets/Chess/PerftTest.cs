@@ -52,7 +52,7 @@ namespace Chess {
                             var res = Perft(depth - 1);
                             nodes += res;
                             totalNodes += res;
-                            _game.stateManager.Undo(discardRedo: true);
+                            _game.stateManager.Undo();
                             MovePieceNoGUI(from, to);
                         }
                     }
@@ -61,7 +61,7 @@ namespace Chess {
                         nodes += res;
                         totalNodes += res;
                     }
-                    _game.stateManager.Undo(discardRedo: true);
+                    _game.stateManager.Undo();
                     
                     if (depth == _depth) Debug.Log($"{(Notation.SquarePos)from}{(Notation.SquarePos)to}: {nodes}");
                 }

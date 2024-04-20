@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using Chess;
 using static Utility.Notation;
@@ -8,30 +9,31 @@ namespace GUI.GameWindow {
         [SerializeField] private PieceGUI _pieceGUI;
         [SerializeField] private Board _board;
         [SerializeField] private Sprite[] _sprites;
+        private readonly List<PieceGUI> _pieceGUIs = new List<PieceGUI>();
         private static Sprite[] _spritesStatic;
-        private static Game _game;
+        private static Game game => Game.instance;
 
         private void Awake() {
-            _game = Game.instance;
             _spritesStatic = _sprites;
         }
 
         private void OnEnable() {
-            InitPieces();
+            InitPieces(game.playerColor);
         }
 
         private void OnDisable() {
             RemovePieces();
         }
 
-        public void InitPieces() {
-            foreach (int pieceIndex in _game.pieceIndexes) {
-                Piece piece = _game.board[pieceIndex]!.Value;
-                var point = piece.index.ToSquarePosVector2();
+        public void InitPieces(PieceColor orientation) {
+            foreach (int pieceIndex in game.pieceIndexes) {
+                Piece piece = game.board[pieceIndex]!.Value;
+                var point = piece.index.ToSquarePosVector2(orientation);
                 PieceGUI p = Instantiate(_pieceGUI, point, Quaternion.identity, Board.GetSquare(piece.index).transform);
                 p.piece = piece;
                 p.SetSprite(PieceToSprite(piece));
                 p.name = piece.ToString();
+                _pieceGUIs.Add(p);
             }
         }
 
@@ -42,6 +44,14 @@ namespace GUI.GameWindow {
             
             foreach (PieceGUI piece in _board.GetComponentsInChildren<PieceGUI>()) {
                 Destroy(piece.gameObject);
+            }
+            
+            _pieceGUIs.Clear();
+        }
+        
+        public void Flip() {
+            foreach (PieceGUI p in _pieceGUIs) {
+                p.transform.Rotate(0, 0, 180);
             }
         }
 

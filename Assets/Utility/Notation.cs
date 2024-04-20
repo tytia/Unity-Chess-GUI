@@ -19,12 +19,14 @@ namespace Utility {
             a8, b8, c8, d8, e8, f8, g8, h8
         }
 
-        public static Vector2 ToSquarePosVector2(this int index) {
-            return new Vector2(index % 8, index / 8);
+        public static Vector2 ToSquarePosVector2(this int index, PieceColor orientation) {
+            return orientation == PieceColor.White
+                ? new Vector2(index % 8, index / 8)
+                : new Vector2(7 - index % 8, 7 - index / 8);
         }
         
-        public static int ToBoardIndex(this Vector3 vec) {
-            return (int)(vec.x + vec.y * 8);
+        public static int ToBoardIndex(this Vector3 vec, PieceColor orientation) {
+            return orientation == PieceColor.White ? (int)(vec.x + vec.y * 8) : (int)((7 - vec.x) + (7 - vec.y) * 8);
         }
 
         public static readonly Dictionary<char, (PieceType type, PieceColor color)> charToPieceInfo = new() {

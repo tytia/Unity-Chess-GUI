@@ -1,4 +1,5 @@
 using Chess;
+using GUI.GameWindow.Popups;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using Utility;
@@ -9,23 +10,22 @@ namespace GUI.GameWindow {
         private SpriteRenderer _sr;
         private Camera _cam;
         private int _pieceIndex;
-        private static Game _game;
+        private static Game game => Game.instance;
 
         public Piece piece {
-            get => _game.board[_pieceIndex]!.Value;
+            get => game.board[_pieceIndex]!.Value;
             set => _pieceIndex = value.index;
         }
 
         private void Awake() {
             _sr = GetComponent<SpriteRenderer>();
             _cam = Camera.main;
-            _game = Game.instance;
         }
 
         private void Start() {
             // need to wait for piece to be properly initialised before getting it,
             // which is why this is in Start() and not Awake()
-            if (piece.color != _game.playerColor && !_game.analysisMode) {
+            if (piece.color != game.playerColor && !game.analysisMode) {
                 enabled = false;
             }
         }
@@ -42,7 +42,7 @@ namespace GUI.GameWindow {
 
         public void OnPointerUp(PointerEventData eventData) {
             Square nearestSquare = MoveToNearestSquare();
-            if (selectedPiece.Equals(piece) && nearestSquare.transform == transform.parent) {
+            if (nearestSquare != null && selectedPiece.Equals(piece) && nearestSquare.transform == transform.parent) {
                 UnHighlightLegalMoves();
             }
             else {
@@ -51,7 +51,7 @@ namespace GUI.GameWindow {
         }
 
         private void MovePiece(int to) {
-            _game.MovePiece(piece, to);
+            game.MovePiece(piece, to);
             HighlightPrevMove(); // needs to be after MovePiece() because MovePiece() changes prevMove
             _pieceIndex = to;
         }
@@ -90,7 +90,7 @@ namespace GUI.GameWindow {
             Vector2 mousePosWorld = _cam.ScreenToWorldPoint(Input.mousePosition);
             Collider2D squareCollider = Physics2D.OverlapPoint(mousePosWorld, LayerMask.GetMask("Board"));
             // assign an impossible index if collider is null
-            int to = squareCollider != null ? squareCollider.transform.position.ToBoardIndex() : -1;
+            int to = squareCollider != null ? squareCollider.transform.position.ToBoardIndex(game.playerColor) : -1;
 
             if (piece.GetLegalSquares().Contains(to)) {
                 Destroy(Board.GetPieceGUI(to)?.gameObject);
@@ -103,35 +103,35 @@ namespace GUI.GameWindow {
             transform.position = transform.parent.position;
             _sr.sortingOrder = 0;
 
-            return squareCollider.GetComponent<Square>();
+            return squareCollider != null ? squareCollider.GetComponent<Square>() : null;
         }
 
         public static void UndoMove() {
-            Move move = _game.prevMove!.Value;
+            Move move = game.prevMove!.Value;
             PieceGUI pieceGUI = Board.GetPieceGUI(move.to);
 
             MovePieceGUI(pieceGUI, move.from);
 
-            if (PopupManager.pawnPromotion.boardDim.IsActive()) {
+            if (PopupManager.pawnPromotionPopup.boardDim.IsActive()) {
                 // cancel promotion
-                _game.stateManager.ApplyState(_game.stateManager.last);
+                game.stateManager.ApplyState(game.stateManager.last);
             }
             else {
-                if (_game.MoveWasPromotion()) {
+                if (game.MoveWasPromotion()) {
                     pieceGUI.SetSprite(PieceManager.PieceToSprite(move.piece));
                     pieceGUI.name = move.piece.ToString();
                 }
                 
-                _game.stateManager.Undo();
+                game.stateManager.Undo();
             }
             
             HighlightPrevMove();
 
-            if (_game.board[move.to] != null) {
+            if (game.board[move.to] != null) {
                 // instantiate captured piece
-                PieceGUI p = Instantiate(pieceGUI, move.to.ToSquarePosVector2(), Quaternion.identity,
+                PieceGUI p = Instantiate(pieceGUI, move.to.ToSquarePosVector2(game.playerColor), Quaternion.identity,
                     Board.GetSquare(move.to).transform);
-                p.piece = _game.board[move.to]!.Value;
+                p.piece = game.board[move.to]!.Value;
                 p.SetSprite(PieceManager.PieceToSprite(p.piece));
                 p.name = p.piece.ToString();
             }

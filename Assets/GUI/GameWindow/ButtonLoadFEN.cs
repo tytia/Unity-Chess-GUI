@@ -8,12 +8,7 @@ namespace GUI.GameWindow {
     {
         [SerializeField] private TMP_InputField _fenInput;
         [SerializeField] private GameObject _errorText;
-        [SerializeField] private PieceManager _pieceManager;
-        private static Game _game;
-
-        private void Awake() {
-            _game = Game.instance;
-        }
+        [SerializeField] private GameManager _gameManager;
 
         public void LoadFEN() {
             string fenText = _fenInput.text.Trim();
@@ -22,18 +17,9 @@ namespace GUI.GameWindow {
                 return;
             }
             
-            StartNewGame(fenText);
-            
+            _gameManager.StartNewGame(fenText);
             _fenInput.text = "";
             _errorText.SetActive(false);
-        }
-        
-        private void StartNewGame(string fen) {
-            _game.StartNewGame(fen);
-            MoveGenerator.Reset();
-            _pieceManager.RemovePieces();
-            _pieceManager.InitPieces();
-            HighlightManager.ClearHighlights();
         }
     }
 }
