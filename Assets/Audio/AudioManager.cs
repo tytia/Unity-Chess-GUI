@@ -4,17 +4,16 @@ using UnityEngine;
 
 namespace Audio {
     public class AudioManager : MonoBehaviour {
+        [SerializeField] private AudioSource _audioSource;
         [SerializeField] private AudioClip _move;
         [SerializeField] private AudioClip _capture;
         [SerializeField] private AudioClip _check;
         [SerializeField] private AudioClip _gameEnd;
         [SerializeField] private AudioClip _promote;
         [SerializeField] private AudioClip _premove;
-        private static AudioSource _audioSource;
         private static Game _game;
 
         private void Awake() {
-            _audioSource = GetComponent<AudioSource>();
             _game = Game.instance;
             Game.MoveEnd += PlayMoveSfx;
         }
