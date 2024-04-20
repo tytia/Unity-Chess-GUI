@@ -263,6 +263,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c2114550f53f3804f93f135e1bc002cd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _audioSource: {fileID: 184141437}
   _move: {fileID: 8300000, guid: 4efd861f7f1fb8148b876e98b5d83bf3, type: 3}
   _capture: {fileID: 8300000, guid: cee0e7ceae60b3c4ea6d03d10de6eaeb, type: 3}
   _check: {fileID: 8300000, guid: bf22fbd225cde6048abd7286d52cd5ab, type: 3}
