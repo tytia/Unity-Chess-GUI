@@ -11,8 +11,8 @@ namespace GUI.GameWindow.Popups {
         public static NewGamePopup newGamePopup { get; set; }
         public static GameEndPopup gameEndPopup { get; set; }
 
-        public static void ShowPawnPromotionPopup(Piece pawn) {
-            pawnPromotionPopup.Assign(pawn);
+        public static void ShowPawnPromotionPopup(int pawnIndex) {
+            pawnPromotionPopup.Assign(pawnIndex);
             pawnPromotionPopup.Show(true);
         }
         

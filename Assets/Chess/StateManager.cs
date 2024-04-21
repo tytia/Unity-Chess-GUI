@@ -6,7 +6,6 @@ namespace Chess {
     public record GameState {
         // game data
         public Piece?[] board { get; } = new Piece?[64];
-        public HashSet<int> pieces { get; }
         public PieceColor colorToMove { get; }
         public CastlingRights castlingRights { get; }
         public int? enPassantIndex { get; }
@@ -21,8 +20,7 @@ namespace Chess {
 
         public GameState(Game game) {
             // game data
-            Array.Copy(game.board, board, 64);
-            pieces = new HashSet<int>(game.pieceIndexes);
+            Array.Copy(game._board, board, 64);
             colorToMove = game.colorToMove;
             castlingRights = game.castlingRights;
             enPassantIndex = game.enPassantIndex;
@@ -67,8 +65,7 @@ namespace Chess {
         }
         
         public void ApplyState(GameState state) {
-            game.board = state.board;
-            game.pieceIndexes = new HashSet<int>(state.pieces);
+            game._board = state.board;
             game.colorToMove = state.colorToMove;
             game.castlingRights = state.castlingRights;
             game.enPassantIndex = state.enPassantIndex;

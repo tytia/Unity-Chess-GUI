@@ -7,7 +7,7 @@
  */
 
 using System;
-using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using GUI.GameWindow;
 using GUI.GameWindow.Popups;
@@ -35,8 +35,8 @@ namespace Chess {
 
     public class Game {
         private static Game _instance;
-        public Piece?[] board { get; internal set; } = new Piece?[64];
-        public HashSet<int> pieceIndexes { get; internal set; } = new(32);
+        internal Piece?[] _board = new Piece?[64];
+        public ReadOnlyCollection<Piece?> board => Array.AsReadOnly(_board);
         public PieceColor playerColor { get; internal set; }
         public PieceColor colorToMove { get; internal set; }
         public CastlingRights castlingRights { get; internal set; }
@@ -149,27 +149,24 @@ namespace Chess {
         }
         
         private void UpdateEnPassantIndex() {
+            int from = prevMove!.Value.from, to = prevMove!.Value.to;
             Piece prevPiece = prevMove!.Value.piece;
-            int toIndex = prevMove!.Value.to;
-            if (prevPiece.type == PieceType.Pawn && Math.Abs(prevPiece.index - toIndex) == 16) {
-                enPassantIndex = prevPiece.index + (toIndex - prevPiece.index) / 2;
+            if (prevPiece.type == PieceType.Pawn && Math.Abs(from - to) == 16) {
+                enPassantIndex = from + (to - from) / 2;
             }
             else {
                 enPassantIndex = null;
             }
         }
         
-        public void MovePiece(Piece piece, int to) {
+        public void MovePiece(int from, int to) {
             stateManager.RecordState();
-            var move = new Move(piece, to);
+            var move = new Move(from, to);
 
             prevMove = move;
 
-            pieceIndexes.Remove(piece.index);
-            board[piece.index] = null;
-            piece.index = to;
-            board[to] = piece;
-            pieceIndexes.Add(to);
+            _board[to] = _board[from];
+            _board[from] = null;
 
             if (MoveWasCastle()) {
                 CastleRookMove(move.from);
@@ -180,7 +177,7 @@ namespace Chess {
             else if (MoveWasPromotion()) {
                 // because PromotePawn() does not modify the argument pawn, but instead directly changes the type
                 // of the pawn on the board, we need to call it after the move is made.
-                PopupManager.ShowPawnPromotionPopup(piece);
+                PopupManager.ShowPawnPromotionPopup(to);
                 return; // PromotePawn() will conclude the move
             }
 
@@ -189,17 +186,12 @@ namespace Chess {
 
             void CastleRookMove(int kingIndex) {
                 int rookTo = kingIndex + (to - kingIndex) / 2;
-                int rookPos = MoveGenerator.CastleTargetRookPos(kingIndex, to);
-                Piece rook = board[rookPos]!.Value;
-                PieceGUI rookGUI = Board.GetPieceGUI(rookPos)!;
+                int rookFrom = MoveGenerator.CastleTargetRookPos(kingIndex, to);
+                PieceGUI rookGUI = Board.GetPieceGUI(rookFrom)!;
 
-                pieceIndexes.Remove(rookPos);
-                rook.index = rookTo;
-                board[rookPos] = null;
-                board[rookTo] = rook;
-                pieceIndexes.Add(rookTo);
+                _board[rookTo] = _board[rookFrom];
+                _board[rookFrom] = null;
 
-                rookGUI.piece = rook;
                 rookGUI.transform.parent = Board.GetSquare(rookTo).transform;
                 rookGUI.transform.position = rookGUI.transform.parent.position;
             }
@@ -207,36 +199,36 @@ namespace Chess {
             void EnPassant(int pawnIndex) {
                 int captureIndex = colorToMove == PieceColor.White ? to - 8 : to + 8;
 
-                pieceIndexes.Remove(captureIndex);
-                board[captureIndex] = null;
+                _board[captureIndex] = null;
                 Destroy(Board.GetPieceGUI(captureIndex).gameObject);
             }
         }
 
-        public void MovePiece(int from, int to) {
-            if (board[from] == null) {
-                throw new ArgumentException("No piece at index " + from);
-            }
+        // public void MovePiece(int from, int to) {
+        //     if (board[from] == null) {
+        //         throw new ArgumentException("No piece at index " + from);
+        //     }
+        //
+        //     MovePiece(board[from].Value, to);
+        // }
 
-            MovePiece(board[from].Value, to);
-        }
-
-        public void PromotePawn(Piece pawn, PieceType type) {
+        public void PromotePawn(int pawnIndex, PieceType type) {
             if (stateManager.last is not null) {
-                Assert.AreNotEqual(board, stateManager.last.board,
+                Assert.AreNotEqual(_board, stateManager.last.board,
                     "Move is already finished; PromotePawn() should be called to conclude the move.");
             }
             
+            Piece pawn = _board[pawnIndex]!.Value;
             if (pawn.type != PieceType.Pawn) {
                 throw new ArgumentException("Piece must be a pawn");
             }
 
-            if (pawn.index is > 7 and < 56) {
+            if (pawnIndex is > 7 and < 56) {
                 throw new ArgumentException("Pawn must be on the last rank");
             }
 
-            Piece promoted = new(type, pawn.color, pawn.index);
-            board[pawn.index] = promoted;
+            Piece promoted = new(type, pawn.color);
+            _board[pawnIndex] = promoted;
 
             OnMoveEnd();
         }
@@ -287,8 +279,7 @@ namespace Chess {
 
             string[] fields = fen.Split(' ');
 
-            Array.Clear(board, 0, board.Length);
-            pieceIndexes.Clear();
+            Array.Clear(_board, 0, _board.Length);
             string[] ranks = fields[0].Split('/');
             for (int i = (int)SquarePos.a8, j = 0; j < 8; i -= 8, j++) {
                 for (int fileIndex = 0, file = 0; fileIndex < ranks[j].Length && file < 8; fileIndex++) {
@@ -298,9 +289,8 @@ namespace Chess {
                     }
                     else {
                         var (pieceType, pieceColor) = charToPieceInfo[c];
-                        Piece piece = new Piece(pieceType, pieceColor, i + file);
-                        pieceIndexes.Add(piece.index);
-                        board[i + file] = piece;
+                        var piece = new Piece(pieceType, pieceColor);
+                        _board[i + file] = piece;
                         file++;
                     }
                 }

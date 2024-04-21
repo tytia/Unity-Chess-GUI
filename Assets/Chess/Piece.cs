@@ -16,18 +16,12 @@
     public struct Piece {
         public PieceType type { get; }
         public PieceColor color { get; }
-        public int index { get; set; }
-        
-        public Piece(PieceType type, PieceColor color, int index) {
-            this.type = type;
-            this.color = color;
-            this.index = index;
-        }
+        // public int index { get; set; }
         
         public Piece(PieceType type, PieceColor color) {
             this.type = type;
             this.color = color;
-            index = -1;
+            // index = -1;
         }
 
         public readonly override string ToString() {

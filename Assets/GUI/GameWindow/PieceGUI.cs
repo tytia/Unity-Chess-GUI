@@ -4,16 +4,13 @@ using UnityEngine;
 namespace GUI.GameWindow {
     public class PieceGUI : MonoBehaviour {
         private SpriteRenderer _sr;
-        private MoveHandler _moveHandler;
+        private static Game game => Game.instance;
         
-        public Piece piece {
-            get => _moveHandler.piece;
-            set => _moveHandler.piece = value;
-        }
+        public int index { get; set; }
+        public Piece piece => game.board[index]!.Value;
 
         private void Awake() {
             _sr = GetComponent<SpriteRenderer>();
-            _moveHandler = GetComponent<MoveHandler>();
         }
         
         public void SetSprite(Sprite sprite) {

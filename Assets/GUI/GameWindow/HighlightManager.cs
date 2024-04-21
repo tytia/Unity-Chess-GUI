@@ -1,13 +1,11 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using Chess;
+﻿using Chess;
 using UnityEngine;
 using static Utility.Notation;
 
 namespace GUI.GameWindow {
     public static class HighlightManager {
         private static (int from, int to)? _prevMoveHighlight;
-        public static Piece? selectedPiece { get; set; }
+        public static int selectedIndex { get; set; } = -1;
         public static Square[] highlights { get; } = new Square[64];
         private static Game game => Game.instance;
         private static Move? prevMove => game.prevMove;
@@ -42,16 +40,16 @@ namespace GUI.GameWindow {
             }
         }
 
-        public static void HighlightLegalMoves(Piece piece) {
-            if (selectedPiece.Equals(piece)) {
+        public static void HighlightLegalMoves(int pieceIndex) {
+            if (selectedIndex.Equals(pieceIndex)) {
                 return;
             }
             
             UnHighlightLegalMoves();
-            highlights[piece.index].gameObject.SetActive(true);
-            highlights[piece.index].color = Square.legalMovesColor;
+            highlights[pieceIndex].gameObject.SetActive(true);
+            highlights[pieceIndex].color = Square.legalMovesColor;
 
-            foreach (int index in piece.GetLegalSquares()) {
+            foreach (int index in MoveGenerator.GetLegalSquares(pieceIndex)) {
                 highlights[index].gameObject.SetActive(true);
                 highlights[index].color = Square.legalMovesColor;
             }
@@ -61,7 +59,7 @@ namespace GUI.GameWindow {
             ClearHighlights();
             HighlightPrevMove();
             
-            selectedPiece = null;
+            selectedIndex = -1;
         }
 
         public static void ClearHighlights() {

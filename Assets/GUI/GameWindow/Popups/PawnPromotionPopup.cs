@@ -14,7 +14,7 @@ namespace GUI.GameWindow.Popups {
 
         private readonly Button[] _squareButtons = new Button[4];
         private readonly Image[] _pieceImages = new Image[4];
-        private Piece _pawn;
+        private int _pawnIndex;
         private static Game game => Game.instance;
         
         public Button boardDim => _boardDim;
@@ -53,21 +53,22 @@ namespace GUI.GameWindow.Popups {
             PopupManager.pawnPromotionPopup = this;
         }
 
-        public void Assign(Piece pawn) {
+        public void Assign(int pawnIndex) {
             for (var i = 0; i < _promotionOptions.Length; i++) {
                 Vector3 spawnPos = transform.position + (i * Vector3.down);
                 _squareButtons[i].transform.position = spawnPos;
                 _pieceImages[i].transform.position = spawnPos;
-                
-                _pieceImages[i].sprite = PieceManager.PieceToSprite(new Piece(_promotionOptions[i], pawn.color));
+
+                _pieceImages[i].sprite =
+                    PieceManager.PieceToSprite(new Piece(_promotionOptions[i], game.board[pawnIndex]!.Value.color));
             }
 
-            _pawn = pawn;
+            _pawnIndex = pawnIndex;
         }
 
         public void Show(bool value) {
             if (value) {
-                transform.position = _pawn.index.ToSquarePosVector2(game.playerColor);
+                transform.position = _pawnIndex.ToSquarePosVector2(game.playerColor);
             }
 
             foreach (Transform child in transform) {
@@ -78,10 +79,10 @@ namespace GUI.GameWindow.Popups {
         }
 
         private void Promote(PieceType promotionTarget) {
-            game.PromotePawn(_pawn, promotionTarget);
+            game.PromotePawn(_pawnIndex, promotionTarget);
             
-            var pieceGUI = Board.GetPieceGUI(_pawn.index);
-            var promoted = new Piece(promotionTarget, _pawn.color);
+            var pieceGUI = Board.GetPieceGUI(_pawnIndex);
+            var promoted = new Piece(promotionTarget, game.board[_pawnIndex]!.Value.color);
             pieceGUI.SetSprite(PieceManager.PieceToSprite(promoted));
             pieceGUI.name = promoted.ToString();
             

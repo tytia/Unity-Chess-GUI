@@ -3,13 +3,14 @@ using System.Collections.Generic;
 
 namespace Chess {
     public readonly struct Move {
-        public Piece piece { get; }
         public int to { get; }
-        public int from => piece.index;
+        public int from { get; }
+        public Piece piece { get; }
 
-        public Move(Piece piece, int to) {
-            this.piece = piece;
+        public Move(int from, int to) {
+            this.from = from;
             this.to = to;
+            piece = Game.instance.board[from]!.Value;
         }
     }
 
@@ -43,8 +44,8 @@ namespace Chess {
             UpdateData();
         }
         
-        public static HashSet<int> GetLegalSquares(this Piece piece) {
-            return legalMoves.TryGetValue(piece.index, out var move) ? move : new HashSet<int>();
+        public static HashSet<int> GetLegalSquares(int pieceIndex) {
+            return legalMoves.TryGetValue(pieceIndex, out var move) ? move : new HashSet<int>();
         }
 
         private static void AddMoveIfLegal(this HashSet<int> moves, int from, int to, bool kingMove = false) {
@@ -83,10 +84,10 @@ namespace Chess {
         }
 
         private static void AssignKingIndexes() {
-            foreach (int pieceIndex in _game.pieceIndexes) {
-                Piece piece = _game.board[pieceIndex]!.Value;
-                if (piece.type == PieceType.King) {
-                    kingIndexes[(int)piece.color] = piece.index;
+            for (var i = 0; i < _game.board.Count; i++) {
+                var piece = _game.board[i];
+                if (piece is { type: PieceType.King }) {
+                    kingIndexes[(int)piece.Value.color] = i;
                 }
             }
         }
@@ -102,11 +103,11 @@ namespace Chess {
             }
 
             // we need to calculate the attacked squares first in order to generate correct legal moves
-            foreach (int pieceIndex in _game.pieceIndexes) {
-                Piece piece = _game.board[pieceIndex]!.Value;
-                if (piece.color != _game.colorToMove) {
-                    HashSet<int> moves = GetMoves(pieceIndex, getProtects: true);
-                    attackedSquaresByPiece[pieceIndex] = moves;
+            for (var i = 0; i < _game.board.Count; i++) {
+                var piece = _game.board[i];
+                if (piece is not null && piece.Value.color != _game.colorToMove) {
+                    HashSet<int> moves = GetMoves(i, getProtects: true);
+                    attackedSquaresByPiece[i] = moves;
                     _attackedSquares.UnionWith(moves);
                 }
             }
@@ -115,11 +116,11 @@ namespace Chess {
             _game.inCheck = _attackedSquares.Contains(kingIndexes[(int)_game.colorToMove]);
 
             // generate legal moves
-            foreach (int pieceIndex in _game.pieceIndexes) {
-                Piece piece = _game.board[pieceIndex]!.Value;
-                if (piece.color == _game.colorToMove) {
-                    var moves = GetMoves(pieceIndex);
-                    if (moves.Count != 0) legalMoves[pieceIndex] = moves;
+            for (var i = 0; i < _game.board.Count; i++) {
+                var piece = _game.board[i];
+                if (piece is not null && piece.Value.color == _game.colorToMove) {
+                    var moves = GetMoves(i);
+                    if (moves.Count != 0) legalMoves[i] = moves;
                 }
             }
         }
@@ -133,8 +134,8 @@ namespace Chess {
             Piece fromPiece = _game.board[from]!.Value;
             Piece? toPiece = _game.board[to];
             int capturedPawnIndex = -1; // for possible en passant capture
-            _game.board[from] = null;
-            _game.board[to] = fromPiece;
+            _game._board[from] = null;
+            _game._board[to] = fromPiece;
 
             // if an enemy piece is captured, temporarily remove it's attacking squares
             if (toPiece is not null) {
@@ -143,7 +144,7 @@ namespace Chess {
             }
             else if (fromPiece.type == PieceType.Pawn && to == _game.enPassantIndex) {
                 capturedPawnIndex = _game.colorToMove == PieceColor.White ? to - 8 : to + 8;
-                _game.board[capturedPawnIndex] = null;
+                _game._board[capturedPawnIndex] = null;
                 modifiedEntries.Add((capturedPawnIndex, attackedSquaresByPiece[capturedPawnIndex]));
                 attackedSquaresByPiece.Remove(capturedPawnIndex);
             }
@@ -199,12 +200,12 @@ namespace Chess {
             }
 
             // unmake move
-            _game.board[from] = fromPiece;
-            _game.board[to] = toPiece;
+            _game._board[from] = fromPiece;
+            _game._board[to] = toPiece;
 
             if (capturedPawnIndex != -1) {
-                _game.board[capturedPawnIndex] = new Piece(PieceType.Pawn,
-                    _game.colorToMove == PieceColor.White ? PieceColor.Black : PieceColor.White, capturedPawnIndex);
+                _game._board[capturedPawnIndex] = new Piece(PieceType.Pawn,
+                    _game.colorToMove == PieceColor.White ? PieceColor.Black : PieceColor.White);
             }
 
             return result;
@@ -215,7 +216,7 @@ namespace Chess {
             return piece.type switch {
                 PieceType.Pawn => GetPawnMoves(pieceIndex, piece.color, getProtects),
                 PieceType.Knight => GetKnightMoves(pieceIndex, getProtects),
-                PieceType.Bishop or PieceType.Rook or PieceType.Queen => GetSlidingMoves(piece, getProtects),
+                PieceType.Bishop or PieceType.Rook or PieceType.Queen => GetSlidingMoves(pieceIndex, getProtects),
                 PieceType.King => GetKingMoves(pieceIndex, getProtects),
                 _ => throw new ArgumentOutOfRangeException(nameof(piece.type), "Invalid piece type")
             };
@@ -295,7 +296,8 @@ namespace Chess {
             return moves;
         }
 
-        private static HashSet<int> GetSlidingMoves(Piece piece, bool getProtects = false) {
+        private static HashSet<int> GetSlidingMoves(int index, bool getProtects = false) {
+            Piece piece = _game.board[index]!.Value;
             if (!_slidingPieceDirections.ContainsKey(piece.type)) {
                 throw new ArgumentOutOfRangeException(nameof(piece.type), "Not a sliding piece");
             }
@@ -304,8 +306,8 @@ namespace Chess {
             int[] directions = _slidingPieceDirections[piece.type];
 
             foreach (int dir in directions) {
-                int to = piece.index;
-                for (var _ = 0; _ < _distanceToEdge[piece.index][dir]; _++) {
+                int to = index;
+                for (var _ = 0; _ < _distanceToEdge[index][dir]; _++) {
                     to += dir;
                     if (_game.board[to] != null) {
                         // blocked by a piece
@@ -314,7 +316,7 @@ namespace Chess {
                         }
                         else if (_game.board[to].Value.color != _game.colorToMove) {
                             // can capture
-                            moves.AddMoveIfLegal(piece.index, to);
+                            moves.AddMoveIfLegal(index, to);
                         }
 
                         break;
@@ -324,7 +326,7 @@ namespace Chess {
                         moves.Add(to);
                     }
                     else {
-                        moves.AddMoveIfLegal(piece.index, to);
+                        moves.AddMoveIfLegal(index, to);
                     }
                 }
             }

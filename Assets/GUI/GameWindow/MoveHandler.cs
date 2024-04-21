@@ -9,17 +9,16 @@ namespace GUI.GameWindow {
     public class MoveHandler : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDragHandler {
         private SpriteRenderer _sr;
         private Camera _cam;
-        private int _pieceIndex;
+        private PieceGUI _pieceGUI;
         private static Game game => Game.instance;
 
-        public Piece piece {
-            get => game.board[_pieceIndex]!.Value;
-            set => _pieceIndex = value.index;
-        }
+        private int pieceIndex => _pieceGUI.index;
+        private Piece piece => _pieceGUI.piece;
 
         private void Awake() {
             _sr = GetComponent<SpriteRenderer>();
             _cam = Camera.main;
+            _pieceGUI = GetComponent<PieceGUI>();
         }
 
         private void Start() {
@@ -32,7 +31,7 @@ namespace GUI.GameWindow {
 
         public void OnPointerDown(PointerEventData eventData) {
             _sr.sortingOrder = 1;
-            HighlightLegalMoves(piece);
+            HighlightLegalMoves(pieceIndex);
             FollowMouse();
         }
 
@@ -42,25 +41,24 @@ namespace GUI.GameWindow {
 
         public void OnPointerUp(PointerEventData eventData) {
             Square nearestSquare = MoveToNearestSquare();
-            if (nearestSquare != null && selectedPiece.Equals(piece) && nearestSquare.transform == transform.parent) {
+            if (nearestSquare != null && selectedIndex.Equals(pieceIndex) && nearestSquare.transform == transform.parent) {
                 UnHighlightLegalMoves();
             }
             else {
-                selectedPiece = piece;
+                selectedIndex = pieceIndex;
             }
         }
 
         private void MovePiece(int to) {
-            game.MovePiece(piece, to);
+            game.MovePiece(pieceIndex, to);
             HighlightPrevMove(); // needs to be after MovePiece() because MovePiece() changes prevMove
-            _pieceIndex = to;
+            _pieceGUI.index = to;
         }
 
-        public static void MovePieceGUI(PieceGUI pieceGUI, int to) {
+        private static void MovePieceGUI(PieceGUI pieceGUI, int to) {
             // it is important to note that this method only affects the GUI and updates
             // which piece the specified PieceGUI is referring to
-            var moveHandler = pieceGUI.GetComponent<MoveHandler>();
-            if (to == moveHandler.piece.index) {
+            if (to == pieceGUI.index) {
                 throw new System.ArgumentException("Piece's index should not be the same as the index it's moving to");
             }
 
@@ -68,7 +66,7 @@ namespace GUI.GameWindow {
 
             pieceGUI.transform.parent = Board.GetSquare(to).transform;
             pieceGUI.transform.position = pieceGUI.transform.parent.position;
-            moveHandler._pieceIndex = to;
+            pieceGUI.index = to;
         }
 
         public static void MovePieceGUI(int from, int to) {
@@ -92,7 +90,7 @@ namespace GUI.GameWindow {
             // assign an impossible index if collider is null
             int to = squareCollider != null ? squareCollider.transform.position.ToBoardIndex(game.playerColor) : -1;
 
-            if (piece.GetLegalSquares().Contains(to)) {
+            if (MoveGenerator.GetLegalSquares(pieceIndex).Contains(to)) {
                 Destroy(Board.GetPieceGUI(to)?.gameObject);
                 MovePiece(to);
                 UnHighlightLegalMoves();
@@ -131,7 +129,6 @@ namespace GUI.GameWindow {
                 // instantiate captured piece
                 PieceGUI p = Instantiate(pieceGUI, move.to.ToSquarePosVector2(game.playerColor), Quaternion.identity,
                     Board.GetSquare(move.to).transform);
-                p.piece = game.board[move.to]!.Value;
                 p.SetSprite(PieceManager.PieceToSprite(p.piece));
                 p.name = p.piece.ToString();
             }

@@ -43,12 +43,10 @@ namespace Chess {
             foreach (int from in MoveGenerator.legalMoves.Keys!.ToArray()) {
                 foreach (int to in MoveGenerator.legalMoves[from]) {
                     if (depth == _depth) nodes = 0;
-                    var piece = MovePieceNoGUI(from, to);
-
                     if (_game.MoveWasPromotion()) {
                         var promotionTargets = new [] {PieceType.Queen, PieceType.Knight, PieceType.Bishop, PieceType.Rook};
                         foreach (var promotionTarget in promotionTargets) {
-                            _game.PromotePawn(piece, promotionTarget);
+                            _game.PromotePawn(from, promotionTarget);
                             var res = Perft(depth - 1);
                             nodes += res;
                             totalNodes += res;
@@ -70,23 +68,18 @@ namespace Chess {
             return totalNodes;
         }
         
-        private static Piece MovePieceNoGUI(int from, int to) {
+        private static void MovePieceNoGUI(int from, int to) {
             // optimized version of MovePiece for perft
             if (_game.board[from] == null) {
                 throw new ArgumentException("No piece at index " + from);
             }
-            
             _game.stateManager.RecordState();
-            Piece piece = _game.board[from].Value;
-            var move = new Move(piece, to);
 
+            var move = new Move(from, to);
             _game.prevMove = move;
             
-            _game.pieceIndexes.Remove(piece.index);
-            _game.board[piece.index] = null;
-            piece.index = to;
-            _game.board[to] = piece;
-            _game.pieceIndexes.Add(to);
+            _game._board[to] = _game.board[from];
+            _game._board[from] = null;
 
             if (_game.MoveWasCastle()) {
                 CastleRookMove(move.from);
@@ -95,29 +88,24 @@ namespace Chess {
                 EnPassant(move.from);
             }
             else if (_game.MoveWasPromotion()) {
-                return piece; // PromotePawn() will conclude the move
+                return; // PromotePawn() will conclude the move
             }
 
             _game.OnMoveEnd();
-            return piece;
+            return;
 
             void CastleRookMove(int kingIndex) {
                 int rookTo = kingIndex + (to - kingIndex) / 2;
-                int rookPos = MoveGenerator.CastleTargetRookPos(kingIndex, to);
-                Piece rook = _game.board[rookPos]!.Value;
+                int rookFrom = MoveGenerator.CastleTargetRookPos(kingIndex, to);
 
-                _game.pieceIndexes.Remove(rookPos);
-                rook.index = rookTo;
-                _game.board[rookPos] = null;
-                _game.board[rookTo] = rook;
-                _game.pieceIndexes.Add(rookTo);
+                _game._board[rookTo] = _game.board[rookFrom];
+                _game._board[rookFrom] = null;
             }
 
             void EnPassant(int captorIndex) {
                 int captureIndex = to - captorIndex > 0 ? to - 8 : to + 8;
 
-                _game.pieceIndexes.Remove(captureIndex);
-                _game.board[captureIndex] = null;
+                _game._board[captureIndex] = null;
             }
         }
     }

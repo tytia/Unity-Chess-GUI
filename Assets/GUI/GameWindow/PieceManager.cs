@@ -26,14 +26,16 @@ namespace GUI.GameWindow {
         }
 
         public void InitPieces(PieceColor orientation) {
-            foreach (int pieceIndex in game.pieceIndexes) {
-                Piece piece = game.board[pieceIndex]!.Value;
-                var point = piece.index.ToSquarePosVector2(orientation);
-                PieceGUI p = Instantiate(_pieceGUI, point, Quaternion.identity, Board.GetSquare(piece.index).transform);
-                p.piece = piece;
-                p.SetSprite(PieceToSprite(piece));
-                p.name = piece.ToString();
-                _pieceGUIs.Add(p);
+            for (var i = 0; i < game.board.Count; i++) {
+                var piece = game.board[i];
+                if (piece is not null) {
+                    var point = i.ToSquarePosVector2(orientation);
+                    PieceGUI pieceGUI = Instantiate(_pieceGUI, point, Quaternion.identity, Board.GetSquare(i).transform);
+                    pieceGUI.SetSprite(PieceToSprite(piece.Value));
+                    pieceGUI.name = piece.ToString();
+                    pieceGUI.index = i;
+                    _pieceGUIs.Add(pieceGUI);
+                }
             }
         }
 
