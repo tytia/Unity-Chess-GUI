@@ -79,7 +79,7 @@ namespace GUI.GameWindow.Popups {
         }
 
         private void Promote(PieceType promotionTarget) {
-            game.PromotePawn(_pawnIndex, promotionTarget);
+            Moves.PromotePawn(_pawnIndex, promotionTarget);
             
             var pieceGUI = Board.GetPieceGUI(_pawnIndex);
             var promoted = new Piece(promotionTarget, game.board[_pawnIndex]!.Value.color);

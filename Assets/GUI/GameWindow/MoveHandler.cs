@@ -50,7 +50,7 @@ namespace GUI.GameWindow {
         }
 
         private void MovePiece(int to) {
-            game.MovePiece(pieceIndex, to);
+            Moves.MovePiece(pieceIndex, to);
             HighlightPrevMove(); // needs to be after MovePiece() because MovePiece() changes prevMove
             _pieceGUI.index = to;
         }
@@ -115,9 +115,10 @@ namespace GUI.GameWindow {
                 game.stateManager.ApplyState(game.stateManager.last);
             }
             else {
-                if (game.MoveWasPromotion()) {
+                if (Moves.LastMoveWasPromotion()) {
                     pieceGUI.SetSprite(PieceManager.PieceToSprite(move.piece));
                     pieceGUI.name = move.piece.ToString();
+                    pieceGUI.index = move.from;
                 }
                 
                 game.stateManager.Undo();
@@ -127,10 +128,11 @@ namespace GUI.GameWindow {
 
             if (game.board[move.to] != null) {
                 // instantiate captured piece
-                PieceGUI p = Instantiate(pieceGUI, move.to.ToSquarePosVector2(game.playerColor), Quaternion.identity,
+                PieceGUI revivedPieceGUI = Instantiate(pieceGUI, move.to.ToSquarePosVector2(game.playerColor), Quaternion.identity,
                     Board.GetSquare(move.to).transform);
-                p.SetSprite(PieceManager.PieceToSprite(p.piece));
-                p.name = p.piece.ToString();
+                revivedPieceGUI.index = move.to;
+                revivedPieceGUI.name = revivedPieceGUI.piece.ToString();
+                revivedPieceGUI.SetSprite(PieceManager.PieceToSprite(revivedPieceGUI.piece));
             }
         }
     }

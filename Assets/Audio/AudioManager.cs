@@ -22,10 +22,10 @@ namespace Audio {
             if (_game.inCheck) {
                 _audioSource.PlayOneShot(_check);
             }
-            else if (_game.MoveWasPromotion()) {
+            else if (Moves.LastMoveWasPromotion()) {
                 _audioSource.PlayOneShot(_promote);
             }
-            else if (_game.MoveWasCapture()) {
+            else if (Moves.LastMoveWasCapture()) {
                 _audioSource.PlayOneShot(_capture);
             }
             else {

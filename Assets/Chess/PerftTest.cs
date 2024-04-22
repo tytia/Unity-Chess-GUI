@@ -43,10 +43,10 @@ namespace Chess {
             foreach (int from in MoveGenerator.legalMoves.Keys!.ToArray()) {
                 foreach (int to in MoveGenerator.legalMoves[from]) {
                     if (depth == _depth) nodes = 0;
-                    if (_game.MoveWasPromotion()) {
+                    if (Moves.LastMoveWasPromotion()) {
                         var promotionTargets = new [] {PieceType.Queen, PieceType.Knight, PieceType.Bishop, PieceType.Rook};
                         foreach (var promotionTarget in promotionTargets) {
-                            _game.PromotePawn(from, promotionTarget);
+                            Moves.PromotePawn(from, promotionTarget);
                             var res = Perft(depth - 1);
                             nodes += res;
                             totalNodes += res;
@@ -74,20 +74,18 @@ namespace Chess {
                 throw new ArgumentException("No piece at index " + from);
             }
             _game.stateManager.RecordState();
-
-            var move = new Move(from, to);
-            _game.prevMove = move;
+            _game.prevMove = new Move(from, to);
             
             _game._board[to] = _game.board[from];
             _game._board[from] = null;
 
-            if (_game.MoveWasCastle()) {
-                CastleRookMove(move.from);
+            if (Moves.LastMoveWasCastle()) {
+                CastleRookMove(from);
             }
-            else if (_game.MoveWasEnPassant()) {
-                EnPassant(move.from);
+            else if (Moves.LastMoveWasEnPassant()) {
+                EnPassant(from);
             }
-            else if (_game.MoveWasPromotion()) {
+            else if (Moves.LastMoveWasPromotion()) {
                 return; // PromotePawn() will conclude the move
             }
 
