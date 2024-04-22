@@ -22,7 +22,7 @@
             this.color = color;
         }
 
-        public readonly override string ToString() {
+        public override string ToString() {
             return $"{color} {type}";
         }
     }
