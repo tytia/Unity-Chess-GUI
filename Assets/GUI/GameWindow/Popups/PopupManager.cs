@@ -1,5 +1,3 @@
-using Chess;
-
 namespace GUI.GameWindow.Popups {
     public interface IPopup {
         public void Show(bool value);

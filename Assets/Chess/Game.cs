@@ -9,11 +9,7 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
-using GUI.GameWindow;
-using GUI.GameWindow.Popups;
-using UnityEngine.Assertions;
 using static Utility.Notation;
-using static UnityEngine.Object;
 
 namespace Chess {
     [Flags]
