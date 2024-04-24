@@ -67,8 +67,10 @@ namespace Chess {
             LoadFromFEN(fen);
             prevMove = null;
             analysisMode = true; // TODO: temporarily turned on for development, change this later
-            stateManager.Reset();
-            if (_instance != null) MoveGenerator.Reset();
+            if (_instance != null) {
+                stateManager.Reset();
+                MoveGenerator.Reset();
+            }
         }
         
         public void StartNewGame(PieceColor plyrColor) {

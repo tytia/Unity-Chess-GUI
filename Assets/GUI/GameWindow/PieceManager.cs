@@ -9,16 +9,16 @@ namespace GUI.GameWindow {
         [SerializeField] private PieceGUI _pieceGUI;
         [SerializeField] private Board _board;
         [SerializeField] private Sprite[] _sprites;
-        private readonly List<PieceGUI> _pieceGUIs = new List<PieceGUI>();
+        private readonly List<PieceGUI> _pieceGUIs = new();
         private static Sprite[] _spritesStatic;
-        private static Game game => Game.instance;
+        private static readonly Game _game = Game.instance;
 
         private void Awake() {
             _spritesStatic = _sprites;
         }
 
         private void OnEnable() {
-            InitPieces(game.playerColor);
+            InitPieces(_game.playerColor);
         }
 
         private void OnDisable() {
@@ -26,8 +26,8 @@ namespace GUI.GameWindow {
         }
 
         public void InitPieces(PieceColor orientation) {
-            for (var i = 0; i < game.board.Count; i++) {
-                var piece = game.board[i];
+            for (var i = 0; i < _game.board.Count; i++) {
+                var piece = _game.board[i];
                 if (piece is not null) {
                     var point = i.ToSquarePosVector2(orientation);
                     PieceGUI pieceGUI = Instantiate(_pieceGUI, point, Quaternion.identity, Board.GetSquare(i).transform);

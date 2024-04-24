@@ -10,7 +10,7 @@ namespace GUI.GameWindow {
         private SpriteRenderer _sr;
         private Camera _cam;
         private PieceGUI _pieceGUI;
-        private static Game game => Game.instance;
+        private static readonly Game _game = Game.instance;
 
         private int pieceIndex => _pieceGUI.index;
         private Piece piece => _pieceGUI.piece;
@@ -24,7 +24,7 @@ namespace GUI.GameWindow {
         private void Start() {
             // need to wait for piece to be properly initialised before getting it,
             // which is why this is in Start() and not Awake()
-            if (piece.color != game.playerColor && !game.analysisMode) {
+            if (piece.color != _game.playerColor && !_game.analysisMode) {
                 enabled = false;
             }
         }
@@ -88,7 +88,7 @@ namespace GUI.GameWindow {
             Vector2 mousePosWorld = _cam.ScreenToWorldPoint(Input.mousePosition);
             Collider2D squareCollider = Physics2D.OverlapPoint(mousePosWorld, LayerMask.GetMask("Board"));
             // assign an impossible index if collider is null
-            int to = squareCollider != null ? squareCollider.transform.position.ToBoardIndex(game.playerColor) : -1;
+            int to = squareCollider != null ? squareCollider.transform.position.ToBoardIndex(_game.playerColor) : -1;
 
             if (MoveGenerator.GetLegalSquares(pieceIndex).Contains(to)) {
                 Destroy(Board.GetPieceGUI(to)?.gameObject);
@@ -105,14 +105,14 @@ namespace GUI.GameWindow {
         }
 
         public static void UndoMove() {
-            Move move = game.prevMove!.Value;
+            Move move = _game.prevMove!.Value;
             PieceGUI pieceGUI = Board.GetPieceGUI(move.to);
 
             MovePieceGUI(pieceGUI, move.from);
 
             if (PopupManager.pawnPromotionPopup.boardDim.IsActive()) {
                 // cancel promotion
-                game.stateManager.ApplyState(game.stateManager.last);
+                _game.stateManager.ApplyState(_game.stateManager.last);
             }
             else {
                 if (Moves.LastMoveWasPromotion()) {
@@ -121,14 +121,14 @@ namespace GUI.GameWindow {
                     pieceGUI.index = move.from;
                 }
                 
-                game.stateManager.Undo();
+                _game.stateManager.Undo();
             }
             
             HighlightPrevMove();
 
-            if (game.board[move.to] != null) {
+            if (_game.board[move.to] != null) {
                 // instantiate captured piece
-                PieceGUI revivedPieceGUI = Instantiate(pieceGUI, move.to.ToSquarePosVector2(game.playerColor), Quaternion.identity,
+                PieceGUI revivedPieceGUI = Instantiate(pieceGUI, move.to.ToSquarePosVector2(_game.playerColor), Quaternion.identity,
                     Board.GetSquare(move.to).transform);
                 revivedPieceGUI.index = move.to;
                 revivedPieceGUI.name = revivedPieceGUI.piece.ToString();

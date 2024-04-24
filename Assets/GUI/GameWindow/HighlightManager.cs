@@ -7,13 +7,13 @@ namespace GUI.GameWindow {
         private static (int from, int to)? _prevMoveHighlight;
         public static int selectedIndex { get; set; } = -1;
         public static Square[] highlights { get; } = new Square[64];
-        private static Game game => Game.instance;
-        private static Move? prevMove => game.prevMove;
+        private static readonly Game _game = Game.instance;
+        private static Move? prevMove => _game.prevMove;
         
         public static void InitHighlights(Square highlight) {
             Transform parent = GameObject.FindWithTag("Highlights").transform;
             for (var i = 0; i < 64; i++) {
-                var point = i.ToSquarePosVector2(game.playerColor);
+                var point = i.ToSquarePosVector2(_game.playerColor);
                 Square highlightSquare = Object.Instantiate(highlight, point, Quaternion.identity, parent);
                 highlightSquare.name = i.ToString();
 

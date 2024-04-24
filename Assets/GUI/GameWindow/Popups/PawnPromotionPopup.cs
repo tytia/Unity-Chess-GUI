@@ -15,7 +15,7 @@ namespace GUI.GameWindow.Popups {
         private readonly Button[] _squareButtons = new Button[4];
         private readonly Image[] _pieceImages = new Image[4];
         private int _pawnIndex;
-        private static Game game => Game.instance;
+        private static readonly Game _game = Game.instance;
         
         public Button boardDim => _boardDim;
 
@@ -60,7 +60,7 @@ namespace GUI.GameWindow.Popups {
                 _pieceImages[i].transform.position = spawnPos;
 
                 _pieceImages[i].sprite =
-                    PieceManager.PieceToSprite(new Piece(_promotionOptions[i], game.board[pawnIndex]!.Value.color));
+                    PieceManager.PieceToSprite(new Piece(_promotionOptions[i], _game.board[pawnIndex]!.Value.color));
             }
 
             _pawnIndex = pawnIndex;
@@ -68,7 +68,7 @@ namespace GUI.GameWindow.Popups {
 
         public void Show(bool value) {
             if (value) {
-                transform.position = _pawnIndex.ToSquarePosVector2(game.playerColor);
+                transform.position = _pawnIndex.ToSquarePosVector2(_game.playerColor);
             }
 
             foreach (Transform child in transform) {
@@ -82,7 +82,7 @@ namespace GUI.GameWindow.Popups {
             Moves.PromotePawn(_pawnIndex, promotionTarget);
             
             var pieceGUI = Board.GetPieceGUI(_pawnIndex);
-            var promoted = new Piece(promotionTarget, game.board[_pawnIndex]!.Value.color);
+            var promoted = new Piece(promotionTarget, _game.board[_pawnIndex]!.Value.color);
             pieceGUI.SetSprite(PieceManager.PieceToSprite(promoted));
             pieceGUI.name = promoted.ToString();
             

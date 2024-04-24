@@ -6,15 +6,15 @@ using static UnityEngine.Object;
 
 namespace Chess {
     public static class Moves {
-        private static Game game => Game.instance;
+        private static readonly Game _game = Game.instance;
         private static StateManager stateManager => StateManager.instance;
         
         public static void MovePiece(int from, int to) {
             stateManager.RecordState();
-            game.prevMove = new Move(from, to);;
+            _game.prevMove = new Move(from, to);;
 
-            game._board[to] = game._board[from];
-            game._board[from] = null;
+            _game._board[to] = _game._board[from];
+            _game._board[from] = null;
 
             if (LastMoveWasCastle()) {
                 CastleRookMove(from);
@@ -29,7 +29,7 @@ namespace Chess {
                 return; // PromotePawn() will conclude the move
             }
 
-            game.OnMoveEnd();
+            _game.OnMoveEnd();
             return;
 
             void CastleRookMove(int kingIndex) {
@@ -37,28 +37,28 @@ namespace Chess {
                 int rookFrom = MoveGenerator.CastleTargetRookPos(kingIndex, to);
                 PieceGUI rookGUI = Board.GetPieceGUI(rookFrom)!;
 
-                game._board[rookTo] = game._board[rookFrom];
-                game._board[rookFrom] = null;
+                _game._board[rookTo] = _game._board[rookFrom];
+                _game._board[rookFrom] = null;
 
                 rookGUI.transform.parent = Board.GetSquare(rookTo).transform;
                 rookGUI.transform.position = rookGUI.transform.parent.position;
             }
 
             void EnPassant(int pawnIndex) {
-                int captureIndex = game.colorToMove == PieceColor.White ? to - 8 : to + 8;
+                int captureIndex = _game.colorToMove == PieceColor.White ? to - 8 : to + 8;
 
-                game._board[captureIndex] = null;
+                _game._board[captureIndex] = null;
                 Destroy(Board.GetPieceGUI(captureIndex).gameObject);
             }
         }
 
         public static void PromotePawn(int pawnIndex, PieceType type) {
             if (stateManager.last is not null) {
-                Assert.AreNotEqual(game._board, stateManager.last.board,
+                Assert.AreNotEqual(_game._board, stateManager.last.board,
                     "Move is already finished; PromotePawn() should be called to conclude the move.");
             }
             
-            Piece pawn = game._board[pawnIndex]!.Value;
+            Piece pawn = _game._board[pawnIndex]!.Value;
             if (pawn.type != PieceType.Pawn) {
                 throw new ArgumentException("Piece must be a pawn");
             }
@@ -68,44 +68,44 @@ namespace Chess {
             }
 
             Piece promoted = new(type, pawn.color);
-            game._board[pawnIndex] = promoted;
+            _game._board[pawnIndex] = promoted;
 
-            game.OnMoveEnd();
+            _game.OnMoveEnd();
         }
         
         public static bool LastMoveWasCapture() {
-            if (game.prevMove == null) {
+            if (_game.prevMove == null) {
                 throw new InvalidOperationException("MoveWasCapture() called before any moves were made");
             }
 
-            Move move = game.prevMove.Value;
+            Move move = _game.prevMove.Value;
             return stateManager.last.board[move.to] != null;
         }
 
         public static bool LastMoveWasCastle() {
-            if (game.prevMove == null) {
+            if (_game.prevMove == null) {
                 throw new InvalidOperationException("MoveWasCastle() called before any moves were made");
             }
 
-            Move move = game.prevMove.Value;
+            Move move = _game.prevMove.Value;
             return move.piece.type == PieceType.King && Math.Abs(move.from - move.to) == 2;
         }
 
         public static bool LastMoveWasEnPassant() {
-            if (game.prevMove == null) {
+            if (_game.prevMove == null) {
                 throw new InvalidOperationException("MoveWasEnPassant() called before any moves were made");
             }
 
-            Move move = game.prevMove.Value;
-            return move.piece.type == PieceType.Pawn && move.to == game.enPassantIndex;
+            Move move = _game.prevMove.Value;
+            return move.piece.type == PieceType.Pawn && move.to == _game.enPassantIndex;
         }
 
         public static bool LastMoveWasPromotion() {
-            if (game.prevMove == null) {
+            if (_game.prevMove == null) {
                 throw new InvalidOperationException("MoveWasPromotion() called before any moves were made");
             }
 
-            Move move = game.prevMove.Value;
+            Move move = _game.prevMove.Value;
             return move.piece.type == PieceType.Pawn && (move.to is < 8 or > 55);
         }
     }

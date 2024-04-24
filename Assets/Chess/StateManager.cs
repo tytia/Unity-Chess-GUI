@@ -50,7 +50,7 @@ namespace Chess {
         public static StateManager instance => _instance ??= new StateManager();
         public GameState last => _undoList.Count != 0 ? _undoList[^1] : null;
         public ReadOnlyCollection<GameState> allStates => _undoList.AsReadOnly();
-        private static Game game => Game.instance;
+        private static readonly Game _game = Game.instance;
 
         private StateManager() {}
         
@@ -60,18 +60,18 @@ namespace Chess {
         }
 
         public void RecordState() {
-            _undoList.Add(new GameState(game));
+            _undoList.Add(new GameState(_game));
             _redoList.Clear();
         }
         
         public void ApplyState(GameState state) {
-            game._board = state.board;
-            game.colorToMove = state.colorToMove;
-            game.castlingRights = state.castlingRights;
-            game.enPassantIndex = state.enPassantIndex;
-            game.halfmoveClock = state.halfmoveClock;
-            game.fullmoveNumber = state.fullmoveNumber;
-            game.prevMove = state.prevMove;
+            _game._board = state.board;
+            _game.colorToMove = state.colorToMove;
+            _game.castlingRights = state.castlingRights;
+            _game.enPassantIndex = state.enPassantIndex;
+            _game.halfmoveClock = state.halfmoveClock;
+            _game.fullmoveNumber = state.fullmoveNumber;
+            _game.prevMove = state.prevMove;
             MoveGenerator.legalMoves = state.legalMoves;
             MoveGenerator.attackedSquaresByPiece = state.attackedSquaresByPiece;
             MoveGenerator.kingIndexes = state.kingIndexes;
@@ -82,11 +82,11 @@ namespace Chess {
                 throw new InvalidOperationException("Undo() called before any moves were made");
             }
 
-            _redoList.Add(new GameState(game));
+            _redoList.Add(new GameState(_game));
             ApplyState(_undoList[^1]);
             _undoList.RemoveAt(_undoList.Count - 1);
             
-            if (fullmove && game.colorToMove == game.playerColor) {
+            if (fullmove && _game.colorToMove == _game.playerColor) {
                 Undo();
             }
         }
@@ -96,7 +96,7 @@ namespace Chess {
                 throw new InvalidOperationException("Redo() called before any moves were undone");
             }
 
-            _undoList.Add(new GameState(game));
+            _undoList.Add(new GameState(_game));
             ApplyState(_redoList[^1]);
             _redoList.RemoveAt(_redoList.Count - 1);
         }

@@ -11,10 +11,10 @@ namespace GUI {
     public class GameManager : MonoBehaviour {
         [SerializeField] private PieceManager _pieceManager;
         [SerializeField] private Board _board;
-        private static Game game => Game.instance;
+        private static readonly Game _game = Game.instance;
 
         public void StartNewGame(PieceColor playerColor) {
-            game.StartNewGame(playerColor);
+            _game.StartNewGame(playerColor);
             _pieceManager.RemovePieces();
             HighlightManager.ClearHighlights();
             PopupManager.ShowGameEndPopup(false);
@@ -28,13 +28,13 @@ namespace GUI {
         
         public void StartNewGame(string fen) {
             if (fen.Trim() == "") fen = StartingFEN;
-            game.StartNewGame(fen);
+            _game.StartNewGame(fen);
             _pieceManager.RemovePieces();
-            _pieceManager.InitPieces(game.playerColor);
+            _pieceManager.InitPieces(_game.playerColor);
             HighlightManager.ClearHighlights();
             PopupManager.ShowGameEndPopup(false);
             
-            if (_board.orientation != game.playerColor) {
+            if (_board.orientation != _game.playerColor) {
                 _board.Flip();
             }
         }
