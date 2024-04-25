@@ -9,7 +9,7 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
-using static Utility.Notation;
+using static Chess.Notation;
 
 namespace Chess {
     [Flags]
@@ -22,8 +22,7 @@ namespace Chess {
         All = WhiteKingSide | WhiteQueenSide | BlackKingSide | BlackQueenSide
     }
     
-    public enum EndState : byte {
-        Ongoing,
+    public enum EndResult : byte {
         Checkmate,
         Stalemate,
         Draw
@@ -41,22 +40,14 @@ namespace Chess {
         public int fullmoveNumber { get; internal set; }
         public Move? prevMove { get; internal set; }
         public bool inCheck { get; internal set; }
-        public EndState endState { get; internal set; }
         public bool analysisMode { get; set; }
         public StateManager stateManager => StateManager.instance;
         public static Game instance => _instance ??= new Game();
-
-        public static event EventHandler MoveEnd;
+        
+        public event EventHandler<GameEndEventArgs> GameEnd; 
 
         private Game() {
             StartNewGame();
-        }
-        
-        internal void OnMoveEnd() {
-            IncrementTurn();
-            MoveGenerator.UpdateData();
-            UpdateEndState();
-            MoveEnd?.Invoke(typeof(Game), EventArgs.Empty);
         }
         
         public void StartNewGame(string fen = StartingFEN) {
@@ -74,7 +65,7 @@ namespace Chess {
             playerColor = plyrColor;
         }
 
-        private void IncrementTurn() {
+        internal void IncrementTurn() {
             if (prevMove == null) {
                 throw new InvalidOperationException("A move must be made before a turn is incremented");
             }
@@ -98,19 +89,18 @@ namespace Chess {
             UpdateEnPassantIndex();
         }
 
-        private void UpdateEndState() {
-            endState = EndState.Ongoing;
+        internal void CheckGameEnd() {
             if (inCheck && MoveGenerator.legalMoves.Count == 0) {
-                endState = EndState.Checkmate;
+                GameEnd?.Invoke(null, new GameEndEventArgs(EndResult.Checkmate));
             }
             else if (MoveGenerator.legalMoves.Count == 0) {
-                endState = EndState.Stalemate;
+                GameEnd?.Invoke(null, new GameEndEventArgs(EndResult.Stalemate));
             }
             else if (fullmoveNumber >= 50) {
-                endState = EndState.Draw;
+                GameEnd?.Invoke(null, new GameEndEventArgs(EndResult.Draw));
             }
             else if (ThreefoldRepetition()) {
-                endState = EndState.Draw;
+                GameEnd?.Invoke(null, new GameEndEventArgs(EndResult.Draw));
             }
 
             return;
@@ -202,6 +192,13 @@ namespace Chess {
             halfmoveClock = Int32.Parse(fields[4]);
 
             fullmoveNumber = fields.Length < 6 ? (halfmoveClock / 2) + 1 : Int32.Parse(fields[5]);
+        }
+    }
+    
+    public class GameEndEventArgs : EventArgs {
+        public EndResult result { get; }
+        public GameEndEventArgs(EndResult result) {
+            this.result = result;
         }
     }
 }

@@ -1,6 +1,5 @@
 ﻿using Chess;
 using UnityEngine;
-using static Utility.Notation;
 
 namespace GUI.GameWindow {
     public static class HighlightManager {

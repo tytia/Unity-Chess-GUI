@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using Chess;
-using static Utility.Notation;
 
 namespace GUI.GameWindow {
     public class PieceManager : MonoBehaviour {

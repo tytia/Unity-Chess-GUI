@@ -1,60 +1,67 @@
 ﻿using System;
-using GUI.GameWindow;
-using GUI.GameWindow.Popups;
 using UnityEngine.Assertions;
-using static UnityEngine.Object;
 
 namespace Chess {
     public static class Moves {
         private static readonly Game _game = Game.instance;
-        private static StateManager stateManager => StateManager.instance;
+        private static readonly StateManager _stateManager = StateManager.instance;
+        
+        public static event EventHandler MoveEnd;
+        public static event EventHandler<CastleEventArgs> Castle;
+        public static event EventHandler<EnPassantEventArgs> EnPassant;
+        public static event EventHandler<PromotionEventArgs> Promotion;
+        
+        internal static void OnMoveEnd() {
+            _game.IncrementTurn();
+            MoveGenerator.UpdateData();
+            _game.CheckGameEnd();
+            MoveEnd?.Invoke(null, EventArgs.Empty);
+        }
         
         public static void MovePiece(int from, int to) {
-            stateManager.RecordState();
+            _stateManager.RecordState();
             _game.prevMove = new Move(from, to);;
 
             _game._board[to] = _game._board[from];
             _game._board[from] = null;
 
             if (LastMoveWasCastle()) {
-                CastleRookMove(from);
+                OnCastle();
             }
             else if (LastMoveWasEnPassant()) {
-                EnPassant(from);
+                OnEnPassant();
             }
             else if (LastMoveWasPromotion()) {
                 // because PromotePawn() does not modify the argument pawn, but instead directly changes the type
                 // of the pawn on the board, we need to call it after the move is made.
-                PopupManager.ShowPawnPromotionPopup(to);
+                Promotion?.Invoke(null, new PromotionEventArgs(to));
                 return; // PromotePawn() will conclude the move
             }
 
-            _game.OnMoveEnd();
+            OnMoveEnd();
             return;
 
-            void CastleRookMove(int kingIndex) {
-                int rookTo = kingIndex + (to - kingIndex) / 2;
-                int rookFrom = MoveGenerator.CastleTargetRookPos(kingIndex, to);
-                PieceGUI rookGUI = Board.GetPieceGUI(rookFrom)!;
+            void OnCastle() {
+                int rookTo = from + (to - from) / 2;
+                int rookFrom = MoveGenerator.GetCastleTargetRookPos(from, to);
 
                 _game._board[rookTo] = _game._board[rookFrom];
                 _game._board[rookFrom] = null;
 
-                rookGUI.transform.parent = Board.GetSquare(rookTo).transform;
-                rookGUI.transform.position = rookGUI.transform.parent.position;
+                Castle?.Invoke(null, new CastleEventArgs(rookFrom, rookTo));
             }
 
-            void EnPassant(int pawnIndex) {
+            void OnEnPassant() {
                 int captureIndex = _game.colorToMove == PieceColor.White ? to - 8 : to + 8;
 
                 _game._board[captureIndex] = null;
-                Destroy(Board.GetPieceGUI(captureIndex).gameObject);
+                EnPassant?.Invoke(null, new EnPassantEventArgs(captureIndex));
             }
         }
 
         public static void PromotePawn(int pawnIndex, PieceType type) {
-            if (stateManager.last is not null) {
-                Assert.AreNotEqual(_game._board, stateManager.last.board,
+            if (_stateManager.last is not null) {
+                Assert.AreNotEqual(_game._board, _stateManager.last.board,
                     "Move is already finished; PromotePawn() should be called to conclude the move.");
             }
             
@@ -70,7 +77,7 @@ namespace Chess {
             Piece promoted = new(type, pawn.color);
             _game._board[pawnIndex] = promoted;
 
-            _game.OnMoveEnd();
+            OnMoveEnd();
         }
         
         public static bool LastMoveWasCapture() {
@@ -79,7 +86,7 @@ namespace Chess {
             }
 
             Move move = _game.prevMove.Value;
-            return stateManager.last.board[move.to] != null;
+            return _stateManager.last.board[move.to] != null;
         }
 
         public static bool LastMoveWasCastle() {
@@ -107,6 +114,32 @@ namespace Chess {
 
             Move move = _game.prevMove.Value;
             return move.piece.type == PieceType.Pawn && (move.to is < 8 or > 55);
+        }
+    }
+
+    public class CastleEventArgs : EventArgs {
+        public int rookFrom { get; }
+        public int rookTo { get; }
+        
+        public CastleEventArgs(int rookFrom, int rookTo) {
+            this.rookFrom = rookFrom;
+            this.rookTo = rookTo;
+        }
+    }
+
+    public class EnPassantEventArgs : EventArgs {
+        public int captureIndex { get; }
+
+        public EnPassantEventArgs(int captureIndex) {
+            this.captureIndex = captureIndex;
+        }
+    }
+
+    public class PromotionEventArgs : EventArgs {
+        public int pawnIndex { get; }
+        
+        public PromotionEventArgs(int pawnIndex) {
+            this.pawnIndex = pawnIndex;
         }
     }
 }

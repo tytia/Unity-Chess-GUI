@@ -1,10 +1,9 @@
-using System;
 using Chess;
 using TMPro;
 using UnityEngine;
 
 namespace GUI.GameWindow.Popups {
-    public class GameEndPopup : MonoBehaviour, IPopup {
+    public class GameEndPopup : Popup {
         [SerializeField] private TextMeshProUGUI _gameEndText;
         private readonly Color _winColor = new Color32(77, 229, 77, 255);
         private readonly Color _loseColor = new Color32(255, 52, 52, 255);
@@ -12,28 +11,13 @@ namespace GUI.GameWindow.Popups {
         private static readonly Game _game = Game.instance;
 
         private void Awake() {
-            PopupManager.gameEndPopup = this;
-            Game.MoveEnd += CheckState;
-        }
-
-        private void Start() {
+            _game.GameEnd += ShowResult;
             Show(false);
         }
 
-        public void Show(bool value) {
-            gameObject.SetActive(value);
-            foreach (Transform child in transform) {
-                child.gameObject.SetActive(value);
-            }
-            
-            PopupManager.ShowNewGamePopup(value);
-        }
-
-        private void CheckState(object sender, EventArgs e) {
-            if (_game.endState == EndState.Ongoing) return;
-            
-            _gameEndText.text = _game.endState.ToString();
-            if (_game.endState == EndState.Checkmate) {
+        private void ShowResult(object sender, GameEndEventArgs e) {
+            _gameEndText.text = e.result.ToString();
+            if (e.result == EndResult.Checkmate) {
                 _gameEndText.color = _game.playerColor != _game.colorToMove ? _winColor : _loseColor;
             }
             else {

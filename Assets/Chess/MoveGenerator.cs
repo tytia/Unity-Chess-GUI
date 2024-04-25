@@ -14,7 +14,7 @@ namespace Chess {
         }
     }
 
-    internal static class MoveGenerator {
+    public static class MoveGenerator {
         private static readonly Dictionary<int, int>[] _distanceToEdge = new Dictionary<int, int>[64];
         private static readonly int[] _rayDirection = new int[64 * 64];
 
@@ -388,7 +388,7 @@ namespace Chess {
             }
         }
 
-        public static int CastleTargetRookPos(int kingIndex, int to) {
+        public static int GetCastleTargetRookPos(int kingIndex, int to) {
             return to > kingIndex ? kingIndex + 3 : kingIndex - 4;
         }
     }

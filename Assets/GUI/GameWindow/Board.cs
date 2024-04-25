@@ -1,6 +1,6 @@
 using Chess;
 using UnityEngine;
-using static Utility.Notation;
+using static Chess.Notation;
 
 namespace GUI.GameWindow {
     public class Board : MonoBehaviour {
@@ -38,10 +38,8 @@ namespace GUI.GameWindow {
                 transform.position = new Vector3(0, 0, 0);
                 orientation = PieceColor.White;
             }
-            // transform.RotateAround(new Vector3(3.5f, 3.5f, 0), Vector3.forward, 180);
             
             _labelManager.Flip();
-            // _pieceManager.Flip();
         }
 
         public static Square GetSquare(int index) {

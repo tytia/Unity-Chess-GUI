@@ -2,7 +2,7 @@ using Chess;
 using GUI.GameWindow;
 using GUI.GameWindow.Popups;
 using UnityEngine;
-using static Utility.Notation;
+using static Chess.Notation;
 
 namespace GUI {
     /// <summary>
@@ -11,13 +11,14 @@ namespace GUI {
     public class GameManager : MonoBehaviour {
         [SerializeField] private PieceManager _pieceManager;
         [SerializeField] private Board _board;
+        [SerializeField] private GameEndPopup _gameEndPopup;
         private static readonly Game _game = Game.instance;
 
         public void StartNewGame(PieceColor playerColor) {
             _game.StartNewGame(playerColor);
             _pieceManager.RemovePieces();
             HighlightManager.ClearHighlights();
-            PopupManager.ShowGameEndPopup(false);
+            _gameEndPopup.Show(false);
 
             if (_board.orientation != playerColor) {
                 _board.Flip();
@@ -32,7 +33,7 @@ namespace GUI {
             _pieceManager.RemovePieces();
             _pieceManager.InitPieces(_game.playerColor);
             HighlightManager.ClearHighlights();
-            PopupManager.ShowGameEndPopup(false);
+            _gameEndPopup.Show(false);
             
             if (_board.orientation != _game.playerColor) {
                 _board.Flip();

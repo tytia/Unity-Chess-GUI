@@ -3,24 +3,21 @@ using UnityEngine;
 using UnityEngine.UI;
 
 namespace GUI.GameWindow.Popups {
-    public class NewGamePopup : MonoBehaviour, IPopup {
+    public class NewGamePopup : Popup {
         [SerializeField] private GameManager _gameManager;
         [SerializeField] private Button _playAsBlack;
         [SerializeField] private Button _playAsWhite;
 
         private void Awake() {
-            PopupManager.newGamePopup = this;
-            _playAsBlack.onClick.AddListener(delegate { _gameManager.StartNewGame(PieceColor.Black); });
-            _playAsWhite.onClick.AddListener(delegate { _gameManager.StartNewGame(PieceColor.White); });
+            _playAsBlack.onClick.AddListener(delegate { StartNewGame(PieceColor.Black); });
+            _playAsWhite.onClick.AddListener(delegate { StartNewGame(PieceColor.White); });
+            Game.instance.GameEnd += (sender, args) => Show(true);
+            Show(false);
         }
         
-        // no need to Show(false) in Start() because it's already done in GameEndPopup.cs
-
-        public void Show(bool value) {
-            gameObject.SetActive(value);
-            foreach (Transform child in transform) {
-                child.gameObject.SetActive(value);
-            }
+        private void StartNewGame(PieceColor playerColor) {
+            _gameManager.StartNewGame(playerColor);
+            Show(false);
         }
     }
 }

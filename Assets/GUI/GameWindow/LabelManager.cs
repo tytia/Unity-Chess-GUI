@@ -2,8 +2,7 @@ using System;
 using Chess;
 using TMPro;
 using UnityEngine;
-using Utility;
-using static Utility.Notation;
+using static Chess.Notation;
 
 namespace GUI.GameWindow {
     public class LabelManager : MonoBehaviour

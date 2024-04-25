@@ -1,11 +1,11 @@
 using Chess;
 using UnityEngine;
 using UnityEngine.UI;
-using Utility;
 
 namespace GUI.GameWindow.Popups {
-    public class PawnPromotionPopup : MonoBehaviour, IPopup {
+    public class PawnPromotionPopup : Popup {
         [SerializeField] private Button _boardDim;
+        [SerializeField] private RectTransform _stripWindow;
         [SerializeField] private Button _squareButtonPrefab;
         [SerializeField] private Image _pieceImagePrefab;
 
@@ -17,8 +17,6 @@ namespace GUI.GameWindow.Popups {
         private int _pawnIndex;
         private static readonly Game _game = Game.instance;
         
-        public Button boardDim => _boardDim;
-
         /*
          * Unity UI elements are drawn based on hierarchy order.
          *
@@ -30,9 +28,18 @@ namespace GUI.GameWindow.Popups {
 
         private void Awake() {
             _boardDim.onClick.AddListener(CancelPromotion);
+            InitialiseDialog();
+            Moves.Promotion += (sender, args) => {
+                Assign(args.pawnIndex);
+                Show(true);
+            };
+            Show(false);
+        }
+
+        private void InitialiseDialog() {
             for (var i = 0; i < _promotionOptions.Length; i++) {
                 Vector3 spawnPos = transform.position + (i * Vector3.down);
-                Button btn = Instantiate(_squareButtonPrefab, spawnPos, Quaternion.identity, transform);
+                Button btn = Instantiate(_squareButtonPrefab, spawnPos, Quaternion.identity, _stripWindow);
                 Image pieceImage = Instantiate(_pieceImagePrefab, spawnPos, Quaternion.identity, btn.transform);
 
                 // AddListener() takes a method as a parameter, so we need to use a delegate to pass in arguments
@@ -45,37 +52,20 @@ namespace GUI.GameWindow.Popups {
                 pieceImage.name = targetType + "Image";
                 _pieceImages[i] = pieceImage;
             }
-
-            Show(false);
         }
 
-        private void Start() {
-            PopupManager.pawnPromotionPopup = this;
-        }
-
-        public void Assign(int pawnIndex) {
+        private void Assign(int pawnIndex) {
+            /*
+             * There is no need to account for the case where we need to show the popup upwards, because the player
+             * will always be facing upwards on the board regardless of what colour they are playing as.
+             */
             for (var i = 0; i < _promotionOptions.Length; i++) {
-                Vector3 spawnPos = transform.position + (i * Vector3.down);
-                _squareButtons[i].transform.position = spawnPos;
-                _pieceImages[i].transform.position = spawnPos;
-
                 _pieceImages[i].sprite =
                     PieceManager.PieceToSprite(new Piece(_promotionOptions[i], _game.board[pawnIndex]!.Value.color));
             }
 
             _pawnIndex = pawnIndex;
-        }
-
-        public void Show(bool value) {
-            if (value) {
-                transform.position = _pawnIndex.ToSquarePosVector2(_game.playerColor);
-            }
-
-            foreach (Transform child in transform) {
-                child.gameObject.SetActive(value);
-            }
-
-            _boardDim.gameObject.SetActive(value);
+            _stripWindow.position = _pawnIndex.ToSquarePosVector2(_game.playerColor);
         }
 
         private void Promote(PieceType promotionTarget) {
@@ -90,7 +80,7 @@ namespace GUI.GameWindow.Popups {
         }
 
         private void CancelPromotion() {
-            MoveHandler.UndoMove();
+            SystemMoveHandler.UndoMove();
             Show(false);
         }
     }

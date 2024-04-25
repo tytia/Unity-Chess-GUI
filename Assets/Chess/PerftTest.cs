@@ -2,7 +2,6 @@ using System;
 using System.Diagnostics;
 using System.Linq;
 using UnityEngine;
-using Utility;
 using Debug = UnityEngine.Debug;
 
 namespace Chess {
@@ -89,12 +88,12 @@ namespace Chess {
                 return; // PromotePawn() will conclude the move
             }
 
-            _game.OnMoveEnd();
+            Moves.OnMoveEnd();
             return;
 
             void CastleRookMove(int kingIndex) {
                 int rookTo = kingIndex + (to - kingIndex) / 2;
-                int rookFrom = MoveGenerator.CastleTargetRookPos(kingIndex, to);
+                int rookFrom = MoveGenerator.GetCastleTargetRookPos(kingIndex, to);
 
                 _game._board[rookTo] = _game.board[rookFrom];
                 _game._board[rookFrom] = null;

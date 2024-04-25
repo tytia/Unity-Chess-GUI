@@ -1,3 +1,4 @@
+using GUI.GameWindow;
 using UnityEngine;
 
 namespace GUI {
@@ -5,6 +6,15 @@ namespace GUI {
         [SerializeField] private RectTransform _canvas;
 
         private void Awake() {
+            CenterCanvas();
+            SystemMoveHandler.Initialise();
+        }
+
+        private void Start() {
+            Application.targetFrameRate = 60;
+        }
+        
+        private void CenterCanvas() {
             transform.position = new Vector3((float)8 / 2 - 0.5f, (float)8 / 2 - 0.5f, transform.position.z);
             _canvas.position = new Vector3(transform.position.x, transform.position.y, _canvas.position.z);
             
@@ -13,10 +23,6 @@ namespace GUI {
             var cam = GetComponent<Camera>();
             _canvas.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, (cam.orthographicSize * 2 * cam.aspect) / _canvas.localScale.x);
             _canvas.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, (cam.orthographicSize * 2) / _canvas.localScale.x);
-        }
-
-        private void Start() {
-            Application.targetFrameRate = 60;
         }
     }
 }

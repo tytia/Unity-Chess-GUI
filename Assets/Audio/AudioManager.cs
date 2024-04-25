@@ -15,7 +15,8 @@ namespace Audio {
 
         private void Awake() {
             _game = Game.instance;
-            Game.MoveEnd += PlayMoveSfx;
+            Moves.MoveEnd += PlayMoveSfx;
+            _game.GameEnd += (sender, args) => _audioSource.PlayOneShot(_gameEnd);
         }
 
         private void PlayMoveSfx(object sender, EventArgs e) {
@@ -30,10 +31,6 @@ namespace Audio {
             }
             else {
                 _audioSource.PlayOneShot(_move);
-            }
-            
-            if (_game.endState != EndState.Ongoing) {
-                _audioSource.PlayOneShot(_gameEnd);
             }
         }
     }

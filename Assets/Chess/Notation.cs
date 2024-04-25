@@ -1,10 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Chess;
-using UnityEngine;
 
-namespace Utility {
+namespace Chess {
     public static class Notation {
         public const string StartingFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
         
@@ -17,16 +15,6 @@ namespace Utility {
             a6, b6, c6, d6, e6, f6, g6, h6,
             a7, b7, c7, d7, e7, f7, g7, h7,
             a8, b8, c8, d8, e8, f8, g8, h8
-        }
-
-        public static Vector2 ToSquarePosVector2(this int index, PieceColor orientation) {
-            return orientation == PieceColor.White
-                ? new Vector2(index % 8, index / 8)
-                : new Vector2(7 - index % 8, 7 - index / 8);
-        }
-        
-        public static int ToBoardIndex(this Vector3 vec, PieceColor orientation) {
-            return orientation == PieceColor.White ? (int)(vec.x + vec.y * 8) : (int)((7 - vec.x) + (7 - vec.y) * 8);
         }
 
         public static readonly Dictionary<char, (PieceType type, PieceColor color)> charToPieceInfo = new() {

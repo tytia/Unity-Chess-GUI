@@ -1,6 +1,6 @@
+using Chess;
 using TMPro;
 using UnityEngine;
-using Utility;
 
 namespace GUI.GameWindow {
     public class ButtonLoadFEN : MonoBehaviour
