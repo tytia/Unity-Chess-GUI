@@ -12,6 +12,10 @@ using System.Linq;
 using static Chess.Notation;
 
 namespace Chess {
+    /// <summary>
+    /// Describes the remaining castling rights of a game. Uses the flags attribute to easily
+    /// check for the presence of specific rights.
+    /// </summary>
     [Flags]
     public enum CastlingRights : byte {
         None = 0,
@@ -22,12 +26,18 @@ namespace Chess {
         All = WhiteKingSide | WhiteQueenSide | BlackKingSide | BlackQueenSide
     }
     
+    /// <summary>
+    /// Describes the possible end states of a game.
+    /// </summary>
     public enum EndResult : byte {
         Checkmate,
         Stalemate,
         Draw
     }
 
+    /// <summary>
+    /// Represents the current state of a chess game.
+    /// </summary>
     public class Game {
         private static Game _instance;
         internal Piece?[] _board = new Piece?[64];
