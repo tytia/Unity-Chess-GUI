@@ -25,8 +25,8 @@ namespace Chess {
         };
 
         // we can use the index as a key because there can only be one piece on a square at a time
-        internal static Dictionary<int, HashSet<int>> legalMoves { get; set; } = new();
-        internal static Dictionary<int, HashSet<int>> attackedSquaresByPiece { get; set; } = new();
+        internal static Dictionary<int, HashSet<int>> legalMoves { get; set; } = new(16);
+        internal static Dictionary<int, HashSet<int>> attackedSquaresByPiece { get; set; } = new(16);
         private static readonly HashSet<int> _attackedSquares = new();
         internal static int[] kingIndexes { get; set; } = new int[2];
 
@@ -60,14 +60,12 @@ namespace Chess {
                     { -1, i % 8 }, // left
                     { 1, 7 - i % 8 }, // right
                     { -8, i / 8 }, // down
-                    { 8, 7 - i / 8 } // up
+                    { 8, 7 - i / 8 }, // up
+                    { 7, Math.Min(7 - i / 8, i % 8) }, // up-left
+                    { 9, Math.Min(7 - i / 8, 7 - i % 8) }, // up-right
+                    { -9, Math.Min(i / 8, i % 8) }, // down-left
+                    { -7, Math.Min(i / 8, 7 - i % 8) } // down-right
                 };
-                // We're self-referencing cardinal directions to calculate diagonals,
-                // therefore can't use collection initializer to initialize them all at once
-                _distanceToEdge[i][7] = Math.Min(_distanceToEdge[i][8], _distanceToEdge[i][-1]); // up-left
-                _distanceToEdge[i][9] = Math.Min(_distanceToEdge[i][8], _distanceToEdge[i][1]); // up-right
-                _distanceToEdge[i][-9] = Math.Min(_distanceToEdge[i][-8], _distanceToEdge[i][-1]); // down-left
-                _distanceToEdge[i][-7] = Math.Min(_distanceToEdge[i][-8], _distanceToEdge[i][1]); // down-right
             }
         }
 
@@ -119,6 +117,8 @@ namespace Chess {
             for (var i = 0; i < _game.board.Count; i++) {
                 var piece = _game.board[i];
                 if (piece is not null && piece.Value.color == _game.colorToMove) {
+                    // we only insert the moves if moves is not empty because we check whether legal moves is empty
+                    // in Game to determine if the game has ended.
                     var moves = GetMoves(i);
                     if (moves.Count != 0) legalMoves[i] = moves;
                 }
