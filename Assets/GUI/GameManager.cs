@@ -1,6 +1,6 @@
+using System;
 using Chess;
 using GUI.GameWindow;
-using GUI.GameWindow.Popups;
 using UnityEngine;
 using static Chess.Notation;
 
@@ -11,20 +11,30 @@ namespace GUI {
     public class GameManager : MonoBehaviour {
         [SerializeField] private PieceManager _pieceManager;
         [SerializeField] private Board _board;
-        [SerializeField] private GameEndPopup _gameEndPopup;
         private static readonly Game _game = Game.instance;
+        public static Engine engine { get; private set; }
+        
+        public event EventHandler GameStart;
+
+        private void Awake() {
+            engine = new Engine(PlayerPrefs.GetString("engine_path"));
+        }
+
+        private void OnApplicationQuit() {
+            engine.KillProcess();
+        }
 
         public void StartNewGame(PieceColor playerColor) {
             _game.StartNewGame(playerColor);
             _pieceManager.RemovePieces();
             HighlightManager.ClearHighlights();
-            _gameEndPopup.Show(false);
 
             if (_board.orientation != playerColor) {
                 _board.Flip();
             }
             
             _pieceManager.InitPieces(playerColor);
+            GameStart?.Invoke(this, EventArgs.Empty);
         }
         
         public void StartNewGame(string fen) {
@@ -33,11 +43,12 @@ namespace GUI {
             _pieceManager.RemovePieces();
             _pieceManager.InitPieces(_game.playerColor);
             HighlightManager.ClearHighlights();
-            _gameEndPopup.Show(false);
             
             if (_board.orientation != _game.playerColor) {
                 _board.Flip();
             }
+            
+            GameStart?.Invoke(this, EventArgs.Empty);
         }
     }
 }

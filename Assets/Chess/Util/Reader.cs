@@ -23,12 +23,9 @@ namespace Chess.Util {
             }
         }
         
-        public static bool TryReadLine(out string line, int millisecondsTimeout = Timeout.Infinite) {
+        public static string ReadLine(int millisecondsTimeout = Timeout.Infinite) {
             _getInput.Set();
-            bool success = _gotInput.WaitOne(millisecondsTimeout);
-            
-            line = success ? _input : null;
-            return success;
+            return _gotInput.WaitOne(millisecondsTimeout) ? _input : null;
         }
     }
 }

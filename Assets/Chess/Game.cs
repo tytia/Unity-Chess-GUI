@@ -31,10 +31,12 @@ namespace Chess {
     /// </summary>
     public enum EndResult : byte {
         Checkmate,
-        Stalemate,
-        Draw
+        DrawByStalemate,
+        DrawByRepitition,
+        DrawByInsufficientMaterial,
+        DrawBy75MoveRule
     }
-
+    
     /// <summary>
     /// Represents the current state of a chess game.
     /// </summary>
@@ -42,6 +44,8 @@ namespace Chess {
         private static Game _instance;
         internal Piece?[] _board = new Piece?[64];
         public ReadOnlyCollection<Piece?> board => Array.AsReadOnly(_board);
+        private readonly bool[] _insufficientMaterial = new bool[2];
+        public ReadOnlyCollection<bool> insufficientMaterial => Array.AsReadOnly(_insufficientMaterial);
         public PieceColor playerColor { get; internal set; }
         public PieceColor colorToMove { get; internal set; }
         public CastlingRights castlingRights { get; internal set; }
@@ -54,7 +58,7 @@ namespace Chess {
         public StateManager stateManager => StateManager.instance;
         public static Game instance => _instance ??= new Game();
         
-        public event EventHandler<GameEndEventArgs> GameEnd; 
+        public event EventHandler<GameEndEventArgs> GameEnd;
 
         private Game() {
             StartNewGame();
@@ -101,27 +105,60 @@ namespace Chess {
 
         internal void CheckGameEnd() {
             if (inCheck && MoveGenerator.legalMoves.Count == 0) {
-                GameEnd?.Invoke(null, new GameEndEventArgs(EndResult.Checkmate));
+                GameEnd?.Invoke(this, new GameEndEventArgs(EndResult.Checkmate));
             }
             else if (MoveGenerator.legalMoves.Count == 0) {
-                GameEnd?.Invoke(null, new GameEndEventArgs(EndResult.Stalemate));
-            }
-            else if (fullmoveNumber >= 50) {
-                GameEnd?.Invoke(null, new GameEndEventArgs(EndResult.Draw));
+                GameEnd?.Invoke(this, new GameEndEventArgs(EndResult.DrawByStalemate));
             }
             else if (ThreefoldRepetition()) {
-                GameEnd?.Invoke(null, new GameEndEventArgs(EndResult.Draw));
+                GameEnd?.Invoke(this, new GameEndEventArgs(EndResult.DrawByRepitition));
+            }
+            else if (InsufficientMaterial()) {
+                GameEnd?.Invoke(this, new GameEndEventArgs(EndResult.DrawByInsufficientMaterial));
+            }
+            else if (fullmoveNumber >= 75) {
+                GameEnd?.Invoke(this, new GameEndEventArgs(EndResult.DrawBy75MoveRule));
             }
 
             return;
             
             bool ThreefoldRepetition() {
                 var history = stateManager.allStates;
-                return history.Count >= 9 && board.SequenceEqual(history[^5].board) &&
-                       board.SequenceEqual(history[^9].board);
+                return history.Count >= 8 && board.SequenceEqual(history[^4].board) &&
+                       board.SequenceEqual(history[^8].board);
+            }
+            
+            bool InsufficientMaterial() {
+                // index 0 is white, index 1 is black
+                int[] bishops = { 0, 0 };
+                int[] knights = { 0, 0 };
+
+                foreach (var piece in _board) {
+                    if (piece == null) continue;
+                
+                    if (piece.Value.type == PieceType.Bishop) {
+                        if (++bishops[(int)piece.Value.color] == 2) {
+                            return false;
+                        }
+                    }
+                    else if (piece.Value.type == PieceType.Knight) {
+                        knights[(int)piece.Value.color]++;
+                    }
+                    else if (piece.Value.type != PieceType.King) {
+                        return false;
+                    }
+                }
+
+                _insufficientMaterial[0] = knights[0] == 1 && bishops[0] == 0 || knights[0] == 0 && bishops[0] == 1;
+                _insufficientMaterial[1] = knights[1] == 1 && bishops[1] == 0 || knights[1] == 0 && bishops[1] == 1;
+            
+                return _insufficientMaterial[0] && _insufficientMaterial[1] 
+                       || // two knights vs lone king
+                       (knights[0] == 2 && bishops[0] == 0 && knights[1] == 0 && bishops[1] == 0) ||
+                       (knights[1] == 2 && bishops[1] == 0 && knights[0] == 0 && bishops[0] == 0);
             }
         }
-        
+
         private void UpdateCastlingRights() {
             if (prevMove!.Value.piece.type == PieceType.King) {
                 castlingRights &= prevMove!.Value.piece.color == PieceColor.White

@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 namespace GUI.GameWindow.Popups {
-    public class PawnPromotionPopup : Popup {
+    public class PawnPromotionPopup : MonoBehaviour {
         [SerializeField] private Button _boardDim;
         [SerializeField] private RectTransform _stripWindow;
         [SerializeField] private Button _squareButtonPrefab;
@@ -31,9 +31,9 @@ namespace GUI.GameWindow.Popups {
             InitialiseDialog();
             Moves.Promotion += (sender, args) => {
                 Assign(args.pawnIndex);
-                Show(true);
+                gameObject.SetActive(true);
             };
-            Show(false);
+            gameObject.SetActive(false);
         }
 
         private void InitialiseDialog() {
@@ -76,12 +76,12 @@ namespace GUI.GameWindow.Popups {
             pieceGUI.SetSprite(PieceManager.PieceToSprite(promoted));
             pieceGUI.name = promoted.ToString();
             
-            Show(false);
+            gameObject.SetActive(false);
         }
 
         private void CancelPromotion() {
             SystemMoveHandler.UndoMove();
-            Show(false);
+            gameObject.SetActive(false);
         }
     }
 }
